@@ -1,0 +1,11 @@
+{
+  "name": "flora",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "dev:web": "pnpm --dir apps/web dev",
+    "lint": "pnpm --dir apps/web lint",
+    "lint:web": "pnpm --dir apps/web lint",
+    "test": "uv run pytest"
+  }
+}

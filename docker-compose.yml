@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: flora
+      POSTGRES_USER: flora
+      POSTGRES_PASSWORD: flora
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.7
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  flora-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uv run uvicorn flora_api.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql+psycopg://flora:flora@postgres:5432/flora
+      QDRANT_URL: http://qdrant:6333
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - qdrant
+
+  flora-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uv run python -m flora_worker.main
+    environment:
+      DATABASE_URL: postgresql+psycopg://flora:flora@postgres:5432/flora
+      QDRANT_URL: http://qdrant:6333
+      WORKER_ID: flora-worker-1
+    depends_on:
+      - postgres
+      - qdrant
+
+  flora-web:
+    image: node:22-alpine
+    working_dir: /app/apps/web
+    command: sh -c "corepack enable && pnpm install && pnpm dev --hostname 0.0.0.0"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    depends_on:
+      - flora-api
+
+volumes:
+  postgres-data:
+  qdrant-data:
