@@ -1,0 +1,21 @@
+[project]
+name = "flora-worker"
+version = "0.1.0"
+description = "Flora background worker service"
+requires-python = ">=3.12"
+dependencies = [
+  "pytest>=8.3.2",
+  "python-dotenv>=1.0.1"
+]
+
+[build-system]
+requires = ["setuptools>=72.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["flora_worker*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

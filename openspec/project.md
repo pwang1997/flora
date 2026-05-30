@@ -6,45 +6,42 @@ Flora is an agentic knowledge-maintenance platform that keeps personal and team 
 Flora is a maintenance layer for living knowledge bases. It is not a note-taking app.
 
 ## Tech Stack
-- Backend API: FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2
-- Worker: Python process polling PostgreSQL outbox events
-- Database: PostgreSQL for durable state and the MVP outbox workflow
-- Vector store: Qdrant in local Docker, behind an adapter boundary
-- Frontend: Next.js, TypeScript, Tailwind CSS
-- Tooling: uv for Python, pnpm for web, Docker Compose for local runtime
-- Testing: pytest for backend/core/connectors; frontend component/e2e tests can be added once dashboard workflows stabilize
+- `flora-core`: FastAPI, Pydantic v2, uv
+- `flora-worker`: Python worker process placeholder, uv
+- `flora-ui`: Next.js, TypeScript, Tailwind CSS, pnpm, currently placeholder only
+- Tooling: Docker Compose for local multi-service runtime
+- Testing: pytest for skeleton smoke tests
 
 ## Project Conventions
 
 ### Code Style
-- Keep domain schemas and enums provider-independent in `packages/shared`.
-- Keep business workflow in `packages/core`.
-- Keep concrete provider reads/writes in `packages/connectors`.
-- Avoid hidden writes: all note mutations must pass through explicit approval and connector write-back paths.
-- Prefer deterministic services and test fixtures in MVP over external network dependencies.
+- Add no production feature behavior without an approved OpenSpec change.
+- Keep skeleton modules small and dependency-light until a feature requires more.
+- Keep shared schemas provider-independent once they are introduced.
+- Avoid hidden writes: future note mutations must pass through explicit approval and connector write-back paths.
 
 ### Architecture Patterns
-- Modular monorepo with a small number of runtime services: web, api, worker, postgres, qdrant.
-- PostgreSQL outbox is the MVP async workflow mechanism; do not introduce Redis or Kafka until throughput/locking needs justify it.
-- Dependency direction:
-  - `apps/api` -> `packages/core` -> `packages/shared`
-  - `apps/worker` -> `packages/core` -> `packages/shared`
-  - `packages/connectors` -> `packages/shared`
-  - `apps/web` -> API contracts
-- Core defines connector and research interfaces; concrete connectors and research providers live outside core.
+- Modular monorepo with root-level service folders.
+- Each service folder is a standalone project/microservice and MUST NOT be folded into a shared `apps/` folder.
+- Do not introduce persistence, queues, vector stores, or provider SDKs without a supervised feature proposal.
+- Service ownership:
+  - `flora-core`: API contracts and future core domain behavior
+  - `flora-worker`: future async/event processing
+  - `flora-ui`: API-backed dashboard
+- Cross-service coupling should happen through HTTP/event contracts or explicit package decisions proposed through OpenSpec.
 
 ### Testing Strategy
 - Validate OpenSpec changes with `openspec validate <change-id> --strict`.
-- Use pytest for shared schemas, core services, connector behavior, API endpoints, and worker handlers.
-- Use temporary Markdown folders for local connector tests.
-- Use deterministic stub evidence in MVP tests so the pipeline can run without API keys.
+- Use service-local pytest suites for Python services.
+- Use `pnpm --dir flora-ui lint` and Next.js build checks for UI changes.
+- Each feature proposal should define its own acceptance tests before implementation.
 
 ### Git Workflow
 - Use feature branches with the `codex/` prefix for Codex-created work.
 - Keep OpenSpec proposal, implementation, and tests aligned in the same branch for MVP bootstrap work.
 
 ## Domain Context
-Core workflow:
+Intended future workflow:
 1. User connects a knowledge source.
 2. Flora scans provider documents and normalizes them into internal document models.
 3. Flora stores document snapshots and extracts factual claims.
@@ -56,12 +53,12 @@ Core workflow:
 9. Flora records audit history for traceability.
 
 ## Important Constraints
-- MVP MUST NOT automatically apply patches without explicit approval.
-- MVP MUST support local Markdown folders and Obsidian vaults as local Markdown.
-- MVP SHOULD use stubbed research/evidence behind an interface until a trusted search provider is selected.
-- MVP excludes Redis, Kafka, Notion, GitHub Docs, native Obsidian plugin work, real multi-user auth, team permissions, and real-time collaboration.
+- Current repo state is skeleton-only.
+- Runtime service folders are `flora-core`, `flora-worker`, and `flora-ui`.
+- Each feature MUST be proposed and approved before implementation.
+- Future implementations MUST NOT automatically apply patches without explicit approval.
+- Frontend feature work is paused until explicitly requested.
 
 ## External Dependencies
-- PostgreSQL for durable source of truth and outbox events.
-- Qdrant for local vector-store topology; vector search can remain lightly wired until the approval workflow is runnable.
-- Future connectors may include Notion and GitHub Docs, but they are out of MVP scope.
+- No runtime external data services are required by the skeleton.
+- Future feature proposals may add PostgreSQL, Qdrant, Notion, GitHub Docs, or research providers.

@@ -4,43 +4,39 @@ Flora is an agentic knowledge-maintenance platform that keeps personal and team 
 
 Short version: Flora is a maintenance layer for living knowledge bases.
 
-## MVP Runtime
+## Skeleton Runtime
 
-- `flora-web`: Next.js dashboard
-- `flora-api`: FastAPI backend API
-- `flora-worker`: Python worker polling the PostgreSQL outbox
-- `postgres`: durable source of truth and outbox workflow
-- `qdrant`: local vector-store topology
+- `flora-core`: standalone FastAPI service with health check only
+- `flora-worker`: standalone Python worker service placeholder
+- `flora-ui`: standalone Next.js service placeholder kept for later supervised frontend work
 
 ## Local Development
 
 ```bash
-uv sync
 pnpm install
 docker compose up --build
 ```
 
-Run backend tests:
+Run all smoke tests:
 
 ```bash
-uv run pytest
+npm test
 ```
 
-Validate the MVP OpenSpec change:
+Validate the skeleton OpenSpec change:
 
 ```bash
-openspec validate bootstrap-flora-mvp --strict
+openspec validate bootstrap-flora-skeleton --strict
 ```
 
 ## Architecture
 
-The MVP uses a modular monorepo with clean service boundaries:
+The repo intentionally contains only structure and guardrails. Feature work should start with an OpenSpec change and be implemented under supervision.
 
-- `apps/api`: FastAPI routes and request/response boundary
-- `apps/worker`: outbox polling and event handlers
-- `apps/web`: dashboard and review UI
-- `packages/shared`: Pydantic DTOs, enums, common types
-- `packages/core`: domain services and workflow logic
-- `packages/connectors`: provider-specific read/write adapters
+- `flora-core`: FastAPI backend, API contracts, and future core domain modules
+- `flora-worker`: background worker process and future async/event processing
+- `flora-ui`: Next.js dashboard and future user-facing workflows
 
-PostgreSQL is the async workflow mechanism in MVP. Redis, Kafka, Notion, GitHub Docs, real auth, and automatic patch application are intentionally deferred.
+Each service folder is treated as a separate project/microservice with its own runtime manifest and Dockerfile. Root-level files are only for orchestration, documentation, and OpenSpec governance.
+
+No source ingestion, claim extraction, persistence, outbox workflow, patch review, or write-back behavior exists in this skeleton.

@@ -3,9 +3,11 @@
   "private": true,
   "packageManager": "pnpm@9.12.3",
   "scripts": {
-    "dev:web": "pnpm --dir apps/web dev",
-    "lint": "pnpm --dir apps/web lint",
-    "lint:web": "pnpm --dir apps/web lint",
-    "test": "uv run pytest"
+    "dev:ui": "pnpm --dir flora-ui dev",
+    "lint": "pnpm --dir flora-ui lint",
+    "lint:ui": "pnpm --dir flora-ui lint",
+    "test": "cd flora-core && uv run pytest && cd ../flora-worker && uv run pytest",
+    "test:core": "cd flora-core && uv run pytest",
+    "test:worker": "cd flora-worker && uv run pytest"
   }
 }

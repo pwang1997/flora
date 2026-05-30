@@ -9,6 +9,7 @@ __pycache__/
 .ruff_cache/
 flora.db
 node_modules/
+.pnpm-store/
 .next/
 dist/
 build/
