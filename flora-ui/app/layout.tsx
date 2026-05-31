@@ -9,13 +9,20 @@ export const metadata: Metadata = {
 
 const nav = [
   ["Overview", "/"],
+  ["Sources", "/sources"],
+  ["Scans", "/scans"],
+  ["Workers", "/workers"],
+  ["Claims", "/claims"],
+  ["Patches", "/patches"],
+  ["Audit", "/audit"],
+  ["Settings", "/settings"],
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#f7faf8] text-ink">
-        <div className="grid min-h-screen grid-cols-[220px_1fr]">
+        <div className="grid min-h-screen grid-cols-[230px_1fr]">
           <aside className="border-r border-[#d9e3de] bg-white px-5 py-6">
             <Link href="/" className="block">
               <span className="block text-xl font-semibold text-moss">Flora</span>
@@ -28,6 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               ))}
             </nav>
+            <div className="mt-8 rounded border border-[#d9e3de] bg-[#f7faf8] p-3 text-xs leading-5 text-[#56615d]">
+              Mock UI mode. Data shown here mirrors the intended MVP workflow and is not connected to `flora-core` yet.
+            </div>
           </aside>
           <main className="px-8 py-7">{children}</main>
         </div>
