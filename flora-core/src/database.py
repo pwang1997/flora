@@ -14,12 +14,6 @@ engine = create_engine(settings.database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def init_db() -> None:
-    import models.sources  # noqa: F401
-
-    Base.metadata.create_all(bind=engine)
-
-
 def get_db() -> Iterator[Session]:
     db = SessionLocal()
     try:
