@@ -44,5 +44,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Run lint
+        run: uv run ruff check .
+
       - name: Run tests
         run: uv run pytest

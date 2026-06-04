@@ -4,7 +4,8 @@
   "packageManager": "pnpm@9.12.3",
   "scripts": {
     "dev:ui": "pnpm --dir flora-ui dev",
-    "lint": "pnpm --dir flora-ui lint",
+    "lint": "npm run lint:core && pnpm --dir flora-ui lint",
+    "lint:core": "cd flora-core && uv run ruff check .",
     "lint:ui": "pnpm --dir flora-ui lint",
     "test": "cd flora-core && uv run pytest && cd ../flora-worker && uv run pytest",
     "test:core": "cd flora-core && uv run pytest",
