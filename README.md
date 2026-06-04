@@ -6,7 +6,7 @@ Short version: Flora is a maintenance layer for living knowledge bases.
 
 ## Skeleton Runtime
 
-- `flora-core`: standalone FastAPI service with health check only
+- `flora-core`: standalone FastAPI service with health check and bootstrap source endpoints
 - `flora-worker`: standalone Python worker service placeholder
 - `flora-ui`: standalone Next.js service placeholder kept for later supervised frontend work
 

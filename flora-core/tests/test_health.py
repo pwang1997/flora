@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from flora_core.main import app
+from main import app
 
 
 def test_core_health_check() -> None:

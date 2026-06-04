@@ -8,18 +8,26 @@ dependencies = [
   "httpx>=0.27.0",
   "pydantic>=2.8.2",
   "pydantic-settings>=2.4.0",
+  "psycopg[binary]>=3.2.3",
   "pytest>=8.3.2",
   "python-dotenv>=1.0.1",
-  "uvicorn[standard]>=0.30.6"
+  "sqlalchemy>=2.0.36",
+  "uvicorn[standard]>=0.30.6",
 ]
 
 [build-system]
 requires = ["setuptools>=72.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+py-modules = ["config", "database", "main"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["flora_core*"]
+include = ["models*", "routes*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
