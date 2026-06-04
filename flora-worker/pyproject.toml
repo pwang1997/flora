@@ -2,7 +2,7 @@
 name = "flora-worker"
 version = "0.1.0"
 description = "Flora background worker service"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
   "pytest>=8.3.2",
   "python-dotenv>=1.0.1"
