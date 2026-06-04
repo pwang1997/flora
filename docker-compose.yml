@@ -1,10 +1,31 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: flora
+      POSTGRES_PASSWORD: flora
+      POSTGRES_DB: flora
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flora -d flora"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5400:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   flora-core:
     build:
       context: ./flora-core
       dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://flora:flora@postgres:5432/flora
     ports:
       - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   flora-worker:
     build:
@@ -21,3 +42,6 @@ services:
       - "3000:3000"
     depends_on:
       - flora-core
+
+volumes:
+  postgres-data:
