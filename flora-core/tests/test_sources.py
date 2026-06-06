@@ -9,7 +9,7 @@ def test_list_sources(client: TestClient, caplog) -> None:
         json={
             "name": "Personal Obsidian Vault",
             "provider_type": "obsidian",
-            "config": {"root_path": "/Users/pwang/Documents/Knowledge"},
+            "config": {"source_path": "/Users/pwang/Documents/Knowledge"},
         },
     )
 
@@ -37,7 +37,7 @@ def test_create_source(client: TestClient, caplog) -> None:
             json={
                 "name": "My Vault",
                 "provider_type": "obsidian",
-                "config": {"root_path": "/Users/pwang/Documents/My Vault"},
+                "config": {"source_path": "/Users/pwang/Documents/My Vault"},
             },
         )
 
@@ -46,7 +46,7 @@ def test_create_source(client: TestClient, caplog) -> None:
     assert payload["id"].startswith("src_")
     assert payload["name"] == "My Vault"
     assert payload["provider_type"] == "obsidian"
-    assert payload["config"]["root_path"] == "/Users/pwang/Documents/My Vault"
+    assert payload["config"]["source_path"] == "/Users/pwang/Documents/My Vault"
 
     list_response = client.get("/v1/sources")
     assert list_response.json()[0]["id"] == payload["id"]
@@ -65,3 +65,38 @@ def test_create_source(client: TestClient, caplog) -> None:
         "created_source_id": payload["id"],
         "created_source_status": "active",
     }
+
+
+def test_create_source_requires_source_path(client: TestClient) -> None:
+    response = client.post(
+        "/v1/sources",
+        json={
+            "name": "My Vault",
+            "provider_type": "obsidian",
+            "config": {},
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == "Value error, config.source_path is required"
+
+
+def test_create_source_rejects_duplicate_source_path(client: TestClient) -> None:
+    payload = {
+        "name": "My Vault",
+        "provider_type": "obsidian",
+        "config": {"source_path": "/Users/pwang/Documents/My Vault"},
+    }
+
+    first_response = client.post("/v1/sources", json=payload)
+    duplicate_response = client.post(
+        "/v1/sources",
+        json={
+            **payload,
+            "name": "My Vault Copy",
+        },
+    )
+
+    assert first_response.status_code == 201
+    assert duplicate_response.status_code == 409
+    assert duplicate_response.json() == {"detail": "config.source_path must be unique"}

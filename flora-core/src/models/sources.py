@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
-from sqlalchemy import DateTime, JSON, Integer, String
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import DateTime, Index, JSON, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
@@ -22,6 +22,14 @@ class SourceCreate(BaseModel):
     provider_type: ProviderType
     config: dict[str, Any] = Field(default_factory=dict)
 
+    @field_validator("config")
+    @classmethod
+    def validate_source_path(cls, config: dict[str, Any]) -> dict[str, Any]:
+        source_path = config.get("source_path")
+        if not isinstance(source_path, str) or not source_path.strip():
+            raise ValueError("config.source_path is required")
+        return config
+
 
 class Source(SourceCreate):
     id: str
@@ -38,6 +46,13 @@ class SourceRecord(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     provider_type: Mapped[str] = mapped_column(String(64), nullable=False)
     config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    __table_args__ = (
+        Index(
+            "uq_sources_config_source_path",
+            config["source_path"].as_string(),
+            unique=True,
+        ),
+    )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     document_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     changed_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

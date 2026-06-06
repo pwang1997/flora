@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -46,10 +47,29 @@ def create_source(payload: SourceCreate, db: Session = Depends(get_db)) -> Sourc
             }
         },
     )
+    source_path = payload.config["source_path"]
+    existing_source_id = db.scalar(
+        select(SourceRecord.id)
+        .where(SourceRecord.config["source_path"].as_string() == source_path)
+        .limit(1)
+    )
+    if existing_source_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="config.source_path must be unique",
+        )
+
     before_count = db.scalar(select(func.count()).select_from(SourceRecord)) or 0
     record = SourceRecord(id=f"src_{uuid4().hex[:12]}", **payload.model_dump())
     db.add(record)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="config.source_path must be unique",
+        ) from exc
     db.refresh(record)
     source = serialize_source(record)
     after_count = db.scalar(select(func.count()).select_from(SourceRecord)) or 0
