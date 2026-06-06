@@ -4,12 +4,12 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import DateTime, Index, JSON, Integer, String
+from sqlalchemy import CheckConstraint, DateTime, Index, JSON, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
 
-ProviderType = Literal["local_markdown", "obsidian"]
+ProviderType = Literal["local_markdown", "obsidian", "github", "notion"]
 SourceStatus = Literal["active", "paused"]
 
 
@@ -29,6 +29,10 @@ class SourceCreate(BaseModel):
         if not isinstance(source_path, str) or not source_path.strip():
             raise ValueError("config.source_path is required")
         return config
+
+
+class SourceDelete(BaseModel):
+    id: str
 
 
 class Source(SourceCreate):
@@ -51,6 +55,11 @@ class SourceRecord(Base):
             "uq_sources_config_source_path",
             config["source_path"].as_string(),
             unique=True,
+        ),
+        CheckConstraint(
+            config["source_path"].as_string().is_not(None)
+            & (func.length(func.trim(config["source_path"].as_string())) > 0),
+            name="ck_sources_config_source_path_not_blank",
         ),
     )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")

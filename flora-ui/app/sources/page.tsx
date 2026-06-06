@@ -6,6 +6,13 @@ import { formatDate } from "@/lib/format";
 import { statusTone } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
 
+const providerOptions: Array<{ label: string; value: SourceCreate["provider_type"] }> = [
+  { label: "Obsidian vault", value: "obsidian" },
+  { label: "Local Markdown", value: "local_markdown" },
+  { label: "GitHub", value: "github" },
+  { label: "Notion", value: "notion" },
+];
+
 export default function SourcesPage() {
   const [sources, setSources] = useState<Source[]>([]);
   const [name, setName] = useState("My Obsidian Vault");
@@ -88,8 +95,11 @@ export default function SourcesPage() {
                 value={providerType}
                 onChange={(e) => setProviderType(e.target.value as SourceCreate["provider_type"])}
               >
-                <option value="obsidian">Obsidian vault</option>
-                <option value="local_markdown">Local Markdown</option>
+                {providerOptions.map((provider) => (
+                  <option key={provider.value} value={provider.value}>
+                    {provider.label}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="grid gap-2 text-sm font-medium">
