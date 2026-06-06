@@ -29,7 +29,7 @@ py-modules = ["config", "database", "main"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["models*", "routes*"]
+include = ["models*", "routes*", "decorators*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
