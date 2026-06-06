@@ -1,16 +1,12 @@
-from importlib import resources
 import services.sources.sources_service as sources_service
 import logging
-from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from database import get_db
 from decorators import logging_wrapper
-from models.sources import Source, SourceCreate, SourceDelete, SourceRecord, serialize_source
+from models.sources import Source, SourceCreate, SourceDelete, serialize_source
 
 logger = logging.getLogger(__name__)
 
