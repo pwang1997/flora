@@ -38,4 +38,6 @@ def create_source(db: Session, payload: SourceCreate) -> SourceRecord:
 def delete_source(db: Session, source_id: str) -> bool:
     stmt = delete(SourceRecord).where(SourceRecord.id == source_id)
     result = db.execute(stmt)
-    return (result.rowcount or 0) > 0
+    db.commit()
+    db.flush()
+    return result.rowcount > 0

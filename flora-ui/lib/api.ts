@@ -70,3 +70,10 @@ export function createSource(payload: SourceCreate) {
     body: JSON.stringify(payload),
   });
 }
+
+export function deleteSource(id: string) {
+  return fetchJson(`/v1/sources/delete`, {
+    method: "DELETE",
+    body: JSON.stringify({ id }),
+  });
+}
