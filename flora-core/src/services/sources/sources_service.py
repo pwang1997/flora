@@ -1,20 +1,45 @@
-from models.sources import SourceCreate
 import repositories.sources.sources_repository as sources_repository
-from models.sources import SourceRecord
-from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.sources import SourceCreate, SourceRecord
 
 
-def list_sources(db: Session) -> list[SourceRecord]:
-    return sources_repository.list_sources(db)
+async def list_sources(db: AsyncSession) -> list[SourceRecord]:
+    return await sources_repository.list_sources(db)
 
-def create_source(db: Session, payload: SourceCreate) -> SourceRecord:
-    return sources_repository.create_source(db, payload)
 
-def delete_source(db: Session, source_id: str) -> bool:
-    return sources_repository.delete_source(db, source_id)
+async def create_source(db: AsyncSession, payload: SourceCreate) -> SourceRecord:
+    existing_source = await sources_repository.get_source_by_path(db, payload.config["source_path"])
+    if existing_source is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="config.source_path must be unique",
+        )
 
-def get_source(db: Session, source_id: str) -> SourceRecord:
-    return sources_repository.get_source(db, source_id)
+    record = await sources_repository.create_source(db, payload)
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="config.source_path must be unique",
+        ) from exc
+    await db.refresh(record)
+    return record
 
-def get_source_by_path(db: Session, source_path: str) -> SourceRecord:
-    return sources_repository.get_source_by_path(db, source_path)
+
+async def delete_source(db: AsyncSession, source_id: str) -> bool:
+    deleted = await sources_repository.delete_source(db, source_id)
+    await db.commit()
+    return deleted
+
+
+async def get_source(db: AsyncSession, source_id: str) -> SourceRecord | None:
+    return await sources_repository.get_source(db, source_id)
+
+
+async def get_source_by_path(db: AsyncSession, source_path: str) -> SourceRecord | None:
+    return await sources_repository.get_source_by_path(db, source_path)

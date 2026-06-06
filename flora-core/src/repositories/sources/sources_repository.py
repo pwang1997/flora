@@ -1,29 +1,30 @@
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import delete, select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.sources import SourceCreate, SourceRecord
 
 
-def list_sources(db: Session) -> list[SourceRecord]:
-    result = db.execute(select(SourceRecord).order_by(SourceRecord.name))
+async def list_sources(db: AsyncSession) -> list[SourceRecord]:
+    result = await db.execute(select(SourceRecord).order_by(SourceRecord.name))
     return list(result.scalars().all())
 
 
-def get_source(db: Session, source_id: str) -> SourceRecord | None:
-    result = db.execute(select(SourceRecord).where(SourceRecord.id == source_id))
+async def get_source(db: AsyncSession, source_id: str) -> SourceRecord | None:
+    result = await db.execute(select(SourceRecord).where(SourceRecord.id == source_id))
     return result.scalar_one_or_none()
 
 
-def get_source_by_path(db: Session, source_path: str) -> SourceRecord | None:
-    result = db.execute(
+async def get_source_by_path(db: AsyncSession, source_path: str) -> SourceRecord | None:
+    result = await db.execute(
         select(SourceRecord).where(SourceRecord.config["source_path"].as_string() == source_path)
     )
     return result.scalar_one_or_none()
 
 
-def create_source(db: Session, payload: SourceCreate) -> SourceRecord:
+async def create_source(db: AsyncSession, payload: SourceCreate) -> SourceRecord:
     record = SourceRecord(
         id=f"src_{uuid4().hex[:12]}",
         name=payload.name,
@@ -31,13 +32,20 @@ def create_source(db: Session, payload: SourceCreate) -> SourceRecord:
         config=payload.config,
     )
     db.add(record)
-    db.flush()
+    await db.flush()
     return record
 
 
-def delete_source(db: Session, source_id: str) -> bool:
-    stmt = delete(SourceRecord).where(SourceRecord.id == source_id)
-    result = db.execute(stmt)
-    db.commit()
-    db.flush()
+async def update_source(db: AsyncSession, source_id: str, updates: dict[str, Any]) -> SourceRecord | None:
+    record = await get_source(db, source_id)
+    if record is None:
+        return None
+    for field, value in updates.items():
+        setattr(record, field, value)
+    await db.flush()
+    return record
+
+
+async def delete_source(db: AsyncSession, source_id: str) -> bool:
+    result = await db.execute(delete(SourceRecord).where(SourceRecord.id == source_id))
     return result.rowcount > 0
