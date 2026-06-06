@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ))}
             </nav>
             <div className="mt-8 rounded border border-[#d9e3de] bg-[#f7faf8] p-3 text-xs leading-5 text-[#56615d]">
-              Mock UI mode. Data shown here mirrors the intended MVP workflow and is not connected to `flora-core` yet.
+              Sources connect to flora-core. Other sections still use mock MVP workflow data.
             </div>
           </aside>
           <main className="px-8 py-7">{children}</main>
