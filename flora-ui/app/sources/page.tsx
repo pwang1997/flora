@@ -1,10 +1,17 @@
 "use client";
 
 import { Badge, PageHeader, Panel, SectionTitle } from "@/components/ui";
-import { createSource, getSources, type Source, type SourceCreate } from "@/lib/api";
+import { createSource, deleteSource, getSources, type Source, type SourceCreate } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { statusTone } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
+
+const providerOptions: Array<{ label: string; value: SourceCreate["provider_type"] }> = [
+  { label: "Obsidian vault", value: "obsidian" },
+  { label: "Local Markdown", value: "local_markdown" },
+  { label: "GitHub", value: "github" },
+  { label: "Notion", value: "notion" },
+];
 
 export default function SourcesPage() {
   const [sources, setSources] = useState<Source[]>([]);
@@ -88,8 +95,11 @@ export default function SourcesPage() {
                 value={providerType}
                 onChange={(e) => setProviderType(e.target.value as SourceCreate["provider_type"])}
               >
-                <option value="obsidian">Obsidian vault</option>
-                <option value="local_markdown">Local Markdown</option>
+                {providerOptions.map((provider) => (
+                  <option key={provider.value} value={provider.value}>
+                    {provider.label}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="grid gap-2 text-sm font-medium">
@@ -134,7 +144,14 @@ export default function SourcesPage() {
                 <span className="text-sm text-[#56615d]">{source.provider_type}</span>
                 <div className="flex justify-end">
                   <Badge tone={statusTone(source.status)}>{source.status}</Badge>
+                  <button
+                    className="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+                    onClick={() => deleteSource(source.id)}
+                  >
+                    Delete
+                  </button>
                 </div>
+
               </div>
             ))
           )}

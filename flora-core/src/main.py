@@ -1,7 +1,18 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import settings
 from routes.sources import router as sources_router
+
+import sys
+
+if "pytest" not in sys.modules:
+    logging.basicConfig(
+        level=settings.log_level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 
 
 app = FastAPI(title="Flora Core", version="0.1.0")

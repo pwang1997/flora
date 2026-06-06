@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Flora Core"
     database_url: str = "postgresql+psycopg://flora:flora@localhost:5400/flora"
+    log_level: str = "DEBUG"
 
 
 settings = Settings()

@@ -4,10 +4,12 @@ export type HealthResponse = {
   status: string;
 };
 
+export type SourceProvider = "local_markdown" | "obsidian" | "github" | "notion";
+
 export interface Source {
   id: string;
   name: string;
-  provider_type: "local_markdown" | "obsidian";
+  provider_type: SourceProvider;
   config: Record<string, unknown>;
   status: string;
   document_count: number;
@@ -59,12 +61,19 @@ export function getHealth() {
 }
 
 export function getSources() {
-  return fetchJson<Source[]>("/v1/sources");
+  return fetchJson<Source[]>("/v1/sources/list");
 }
 
 export function createSource(payload: SourceCreate) {
-  return fetchJson<Source>("/v1/sources", {
+  return fetchJson<Source>("/v1/sources/create", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export function deleteSource(id: string) {
+  return fetchJson(`/v1/sources/delete`, {
+    method: "DELETE",
+    body: JSON.stringify({ id }),
   });
 }
