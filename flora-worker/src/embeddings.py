@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from openai import AsyncOpenAI
 
-from flora_worker.config import settings
+from config import settings
 
 
 class EmbeddingService:

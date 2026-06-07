@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from kafka import KafkaProducer
 
-from flora_worker.config import settings
+from config import settings
 
 
 def _serialize_key(key: str) -> bytes:

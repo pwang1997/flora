@@ -5,7 +5,7 @@ from typing import Any
 
 from qdrant_client import QdrantClient, models
 
-from flora_worker.config import settings
+from config import settings
 
 
 class QdrantVectorStore:
@@ -14,8 +14,22 @@ class QdrantVectorStore:
             host=settings.qdrant_host,
             port=settings.qdrant_port,
             api_key=settings.qdrant_api_key or None,
+            cloud_inference=True,
         )
         self._collection_name = settings.qdrant_collection_name
+        self._ensure_collection()
+
+    def _ensure_collection(self) -> None:
+        if self._client.collection_exists(self._collection_name):
+            return
+
+        self._client.create_collection(
+            collection_name=self._collection_name,
+            vectors_config=models.VectorParams(
+                size=settings.qdrant_vector_size,
+                distance=models.Distance(settings.qdrant_distance),
+            ),
+        )
 
     async def upsert_document_version(
         self,

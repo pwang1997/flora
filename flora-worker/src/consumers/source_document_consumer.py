@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from kafka import KafkaConsumer
 from kafka.structs import OffsetAndMetadata, TopicPartition
 
-from flora_worker.config import settings
-from flora_worker.models import DocumentIngestionEventPayload
+from config import settings
+from models import DocumentIngestionEventPayload
 
 
 def build_kafka_consumer() -> KafkaConsumer:

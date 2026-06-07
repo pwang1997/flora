@@ -24,7 +24,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["flora_worker*"]
+include = ["*"]
 
 [tool.uv.sources]
 flora-shared = { path = "../flora-shared", editable = true }

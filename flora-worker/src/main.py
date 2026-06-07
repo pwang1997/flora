@@ -1,6 +1,6 @@
 import asyncio
 
-from flora_worker.polling import Worker
+from polling import Worker
 
 
 async def run() -> None:

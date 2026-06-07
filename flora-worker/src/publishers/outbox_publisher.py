@@ -6,10 +6,10 @@ from datetime import timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from flora_worker.config import settings
-from flora_worker.database import SessionLocal
-from flora_worker.publishers.source_document_producer import SourceDocumentProducer
-from flora_worker.repositories.outbox import outbox_repository
+from config import settings
+from database import SessionLocal
+from publishers.source_document_producer import SourceDocumentProducer
+from repositories.outbox import outbox_repository
 
 
 class OutboxPublisher:

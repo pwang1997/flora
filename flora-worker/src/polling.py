@@ -1,12 +1,12 @@
 import asyncio
 from typing import Literal
 
-from flora_worker.config import settings
-from flora_worker.consumers.source_document_consumer import SourceDocumentConsumer
-from flora_worker.embeddings import EmbeddingService
-from flora_worker.models import DocumentIngestionEventPayload
-from flora_worker.publishers.outbox_publisher import OutboxPublisher
-from flora_worker.vector_store import QdrantVectorStore
+from config import settings
+from consumers.source_document_consumer import SourceDocumentConsumer
+from embeddings import EmbeddingService
+from models import DocumentIngestionEventPayload
+from publishers.outbox_publisher import OutboxPublisher
+from vector_store import QdrantVectorStore
 
 WorkerRole = Literal["publisher", "ingester", "all"]
 

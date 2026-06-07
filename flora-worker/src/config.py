@@ -1,8 +1,12 @@
+from pathlib import Path
 from typing import Literal
 
 from flora_shared import DEFAULT_DOCUMENT_INGESTION_TOPIC
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+WORKER_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = WORKER_ROOT.parent
 
 
 class Settings(BaseSettings):
@@ -35,10 +39,25 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_embedding_model: str = "text-embedding-3-small"
 
-    qdrant_host: str = "localhost"
+    qdrant_host: str = Field("localhost", validation_alias="QDRANT_HOST")
     qdrant_port: int = 6333
-    qdrant_api_key: str = ""
-    qdrant_collection_name: str = "flora_documents"
+    qdrant_api_key: str = Field("", validation_alias="QDRANT_API_KEY")
+    qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
+    qdrant_vector_size: int = Field(1536, validation_alias="QDRANT_VECTOR_SIZE")
+    qdrant_distance: str = Field("Cosine", validation_alias="QDRANT_DISTANCE")
+
+    @field_validator("kafka_ssl_cafile", mode="after")
+    @classmethod
+    def resolve_kafka_ssl_cafile(cls, value: str) -> str:
+        cafile = Path(value).expanduser()
+        if cafile.is_absolute() or cafile.exists():
+            return str(cafile)
+
+        worker_relative = WORKER_ROOT / cafile
+        if worker_relative.exists():
+            return str(worker_relative)
+
+        return str(cafile)
 
 
 settings = Settings()
