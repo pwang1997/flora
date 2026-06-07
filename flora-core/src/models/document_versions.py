@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -6,13 +6,10 @@ from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, T
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time_utils import utc_now
 
 
 DocumentChangeType = Literal["created", "updated", "deleted", "restored"]
-
-
-def utc_now() -> datetime:
-    return datetime.now(UTC)
 
 
 class DocumentVersionCreate(BaseModel):

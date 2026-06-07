@@ -1,6 +1,6 @@
-from __future__ import annotations
+from utils.time_utils import utc_now
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -11,10 +11,6 @@ from database import Base
 
 
 SourceDocumentStatus = Literal["active", "deleted"]
-
-
-def utc_now() -> datetime:
-    return datetime.now(UTC)
 
 
 class SourceDocumentCreate(BaseModel):
