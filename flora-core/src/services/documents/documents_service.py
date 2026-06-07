@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import repositories.documents.documents_repository as documents_repository
 import repositories.sources.sources_repository as sources_repository
+import services.outbox.outbox_service as outbox_service
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,6 +100,11 @@ async def create_document_version(db: AsyncSession, payload: DocumentVersionCrea
 
     next_version_number = await documents_repository.get_latest_version_number(db, payload.document_id) + 1
     record = await documents_repository.create_document_version(db, payload, next_version_number)
+    await outbox_service.create_document_ingestion_event(
+        db,
+        document=document,
+        version=record,
+    )
     try:
         await db.commit()
     except IntegrityError as exc:

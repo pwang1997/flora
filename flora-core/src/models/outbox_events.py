@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
+from flora_shared.document_events import DocumentIngestionEventPayload
 from pydantic import BaseModel, Field
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -20,7 +21,7 @@ class OutboxEventCreate(BaseModel):
     topic: str = Field(..., min_length=1)
     key: str = Field(..., min_length=1)
     idempotency_key: str = Field(..., min_length=1)
-    payload: dict[str, Any] = Field(default_factory=dict)
+    payload: DocumentIngestionEventPayload
     next_attempt_at: datetime = Field(default_factory=utc_now)
 
 
