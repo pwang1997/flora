@@ -22,11 +22,15 @@ def build_kafka_producer() -> KafkaProducer:
         sasl_mechanism=settings.kafka_sasl_mechanism,
         sasl_plain_username=settings.kafka_username,
         sasl_plain_password=settings.kafka_password,
-        security_protocol="SASL_SSL",
-        ssl_cafile=settings.kafka_ssl_cafile,
+        # security_protocol="SASL_SSL",
+        # ssl_cafile=settings.kafka_ssl_cafile,
         client_id=settings.kafka_producer_client_id,
         key_serializer=_serialize_key,
         value_serializer=_serialize_value,
+        security_protocol="SSL",
+        ssl_cafile="ca.pem",
+        ssl_certfile="service.cert",
+        ssl_keyfile="service.key",
     )
 
 

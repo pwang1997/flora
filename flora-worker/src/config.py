@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     outbox_claim_timeout_seconds: int = 30
     outbox_retry_backoff_seconds: int = 30
     outbox_publish_batch_size: int = 50
-    worker_role: Literal["publisher", "ingester", "all"] = "all"
+    worker_role: Literal["publisher", "ingester", "all"] = Field(
+        "publisher",
+        validation_alias="WORKER_ROLE",
+    )
 
     openai_api_key: str = ""
     openai_embedding_model: str = "text-embedding-3-small"

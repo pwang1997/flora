@@ -23,10 +23,14 @@ def build_kafka_consumer() -> KafkaConsumer:
         sasl_mechanism=settings.kafka_sasl_mechanism,
         sasl_plain_username=settings.kafka_username,
         sasl_plain_password=settings.kafka_password,
-        security_protocol="SASL_SSL",
-        ssl_cafile=settings.kafka_ssl_cafile,
+        # security_protocol="SASL_SSL",
+        # ssl_cafile=settings.kafka_ssl_cafile,
         value_deserializer=lambda value: json.loads(value.decode("utf-8")),
         key_deserializer=lambda value: value.decode("utf-8") if value else None,
+        security_protocol="SSL",
+        ssl_cafile="ca.pem",
+        ssl_certfile="service.cert",
+        ssl_keyfile="service.key",
     )
 
 

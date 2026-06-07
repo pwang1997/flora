@@ -30,12 +30,14 @@ class IngestionWorker:
             await asyncio.sleep(self.poll_interval_seconds)
 
     async def run_once(self) -> int:
+        print("IngestionWorker polling")
         events = await self.consumer.poll()
         processed = 0
         for event in events:
             await self._process_payload(event.payload)
             await self.consumer.commit(event)
             processed += 1
+        print(f"IngestionWorker polled {processed} events")
         return processed
 
     async def _process_payload(self, payload: DocumentIngestionEventPayload) -> None:
@@ -85,9 +87,12 @@ class Worker:
             await asyncio.sleep(self.poll_interval_seconds)
 
     async def run_once(self) -> int:
+        print("worker polling")
+
         processed = 0
         if self.publisher is not None:
             processed += await self.publisher.run_once()
         if self.ingester is not None:
             processed += await self.ingester.run_once()
+        print(f"worker polled {processed} events")
         return processed
