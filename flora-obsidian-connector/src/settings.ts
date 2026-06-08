@@ -1,18 +1,22 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import MyPlugin from './main';
+import FloraConnectorPlugin from './main';
 
-export interface MyPluginSettings {
-	mySetting: string;
+export interface FloraConnectorSettings {
+	floraCoreUrl: string;
+	sourcePath: string;
+	sourceName: string;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default',
+export const DEFAULT_SETTINGS: FloraConnectorSettings = {
+	floraCoreUrl: 'http://localhost:8000',
+	sourcePath: '',
+	sourceName: '',
 };
 
-export class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class FloraConnectorSettingTab extends PluginSettingTab {
+	plugin: FloraConnectorPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: FloraConnectorPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -23,14 +27,39 @@ export class SampleSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc("It's a secret")
+			.setName('Flora core URL')
+			.setDesc('The base URL for flora-core.')
 			.addText((text) =>
 				text
-					.setPlaceholder('Enter your secret')
-					.setValue(this.plugin.settings.mySetting)
+					.setValue(this.plugin.settings.floraCoreUrl)
 					.onChange(async (value) => {
-						this.plugin.settings.mySetting = value;
+						this.plugin.settings.floraCoreUrl = value.trim();
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Source path')
+			.setDesc('Leave blank to use the local vault path.')
+			.addText((text) =>
+				text
+					.setPlaceholder('/path/to/vault')
+					.setValue(this.plugin.settings.sourcePath)
+					.onChange(async (value) => {
+						this.plugin.settings.sourcePath = value.trim();
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('Source name')
+			.setDesc('Leave blank to use the vault name.')
+			.addText((text) =>
+				text
+					.setPlaceholder('My Obsidian vault')
+					.setValue(this.plugin.settings.sourceName)
+					.onChange(async (value) => {
+						this.plugin.settings.sourceName = value.trim();
 						await this.plugin.saveSettings();
 					}),
 			);

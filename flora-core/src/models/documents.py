@@ -37,6 +37,33 @@ class SourceDocumentUpdate(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class SourceDocument(SourceDocumentCreate):
+    id: str
+    status: SourceDocumentStatus = "active"
+    first_seen_at: datetime
+    last_seen_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+
+def serialize_source_document(record: "SourceDocumentRecord") -> SourceDocument:
+    return SourceDocument(
+        id=record.id,
+        source_id=record.source_id,
+        external_id=record.external_id,
+        title=record.title,
+        uri=record.uri,
+        content_hash=record.content_hash,
+        last_modified_at=record.last_modified_at,
+        metadata=record.metadata_,
+        status=record.status,
+        first_seen_at=record.first_seen_at,
+        last_seen_at=record.last_seen_at,
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
+
+
 class SourceDocumentRecord(Base):
     __tablename__ = "source_documents"
 
