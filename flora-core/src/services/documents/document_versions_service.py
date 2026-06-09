@@ -9,17 +9,21 @@ from models.document_versions import DocumentVersionCreate, DocumentVersionRecor
 
 
 async def list_document_versions(db: AsyncSession, document_id: str) -> list[DocumentVersionRecord]:
-    return await document_versions_repository.list_document_versions(db, document_id)
+    return await documents_repository.list_document_versions(db, document_id)
 
 
 async def get_document_version(db: AsyncSession, version_id: str) -> DocumentVersionRecord | None:
-    return await document_versions_repository.get_document_version(db, version_id)
+    return await documents_repository.get_document_version(db, version_id)
 
 
 async def get_document_version_by_number(
     db: AsyncSession, document_id: str, version_number: int
 ) -> DocumentVersionRecord | None:
     return await documents_repository.get_document_version_by_number(db, document_id, version_number)
+
+
+async def get_latest_document_version(db: AsyncSession, document_id: str) -> DocumentVersionRecord | None:
+    return await documents_repository.get_latest_document_version(db, document_id)
 
 
 async def create_document_version(db: AsyncSession, payload: DocumentVersionCreate) -> DocumentVersionRecord:

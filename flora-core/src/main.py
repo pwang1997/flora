@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
+from routes.document_versions import router as document_versions_router
 from routes.source_documents import router as source_documents_router
 from routes.sources import router as sources_router
 
@@ -28,6 +29,7 @@ app.add_middleware(
 
 app.include_router(sources_router)
 app.include_router(source_documents_router)
+app.include_router(document_versions_router)
 
 
 @app.get("/health")

@@ -55,7 +55,6 @@ def test_source_document_constraints(db_session) -> None:
             external_id="note-1",
             title="First note",
             uri="obsidian://note-1",
-            content_hash="abc123",
             last_modified_at=datetime.now(UTC),
             metadata_={"folder": "research"},
         )
@@ -68,7 +67,6 @@ def test_source_document_constraints(db_session) -> None:
             source_id="src_docs",
             external_id="note-1",
             title="Duplicate external id",
-            content_hash="def456",
             metadata_={},
         )
     )
@@ -92,7 +90,6 @@ def test_document_version_constraints(db_session) -> None:
             source_id="src_versions",
             external_id="README.md",
             title="Readme",
-            content_hash="hash-1",
             metadata_={},
         )
     )

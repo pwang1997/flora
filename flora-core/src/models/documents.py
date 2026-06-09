@@ -18,23 +18,21 @@ class SourceDocumentCreate(BaseModel):
     external_id: str = Field(..., min_length=1)
     title: str = Field(..., min_length=1)
     uri: str | None = None
-    content_hash: str = Field(..., min_length=1)
     last_modified_at: datetime | None = None
     metadata_: dict[str, Any] = Field(default_factory=dict, alias="metadata")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class SourceDocumentUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1)
     uri: str | None = None
-    content_hash: str | None = Field(default=None, min_length=1)
     last_modified_at: datetime | None = None
     status: SourceDocumentStatus | None = None
     metadata_: dict[str, Any] | None = Field(default=None, alias="metadata")
     last_seen_at: datetime | None = None
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class SourceDocument(SourceDocumentCreate):
@@ -53,7 +51,6 @@ def serialize_source_document(record: "SourceDocumentRecord") -> SourceDocument:
         external_id=record.external_id,
         title=record.title,
         uri=record.uri,
-        content_hash=record.content_hash,
         last_modified_at=record.last_modified_at,
         metadata=record.metadata_,
         status=record.status,
@@ -79,7 +76,6 @@ class SourceDocumentRecord(Base):
     title: Mapped[str] = mapped_column(String(1024), nullable=False)
     uri: Mapped[str | None] = mapped_column(String(2048), nullable=True)
 
-    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     last_modified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
@@ -100,7 +96,6 @@ class SourceDocumentRecord(Base):
         UniqueConstraint("source_id", "external_id", name="uq_source_documents_source_external_id"),
         CheckConstraint("length(trim(external_id)) > 0", name="ck_source_documents_external_id_not_blank"),
         CheckConstraint("length(trim(title)) > 0", name="ck_source_documents_title_not_blank"),
-        CheckConstraint("length(trim(content_hash)) > 0", name="ck_source_documents_content_hash_not_blank"),
         CheckConstraint(
             "status IN ('active', 'deleted')",
             name="ck_source_documents_status_valid",

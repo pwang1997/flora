@@ -3,8 +3,8 @@ import {
 	DEFAULT_SETTINGS,
 	FloraConnectorSettingTab,
 	FloraConnectorSettings,
-} from './settings';
-import { showSyncResult, syncVaultOnLoad } from './sync';
+} from './settings.js';
+import { showSyncResult, syncVaultOnLoad } from './sync.js';
 
 export default class FloraConnectorPlugin extends Plugin {
 	settings!: FloraConnectorSettings;

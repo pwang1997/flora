@@ -52,7 +52,6 @@ def test_outbox_constraints(db_session) -> None:
             source_id="src_outbox",
             external_id="README.md",
             title="Readme",
-            content_hash="doc-hash",
             metadata_={},
         )
     )

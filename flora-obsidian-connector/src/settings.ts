@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import FloraConnectorPlugin from './main';
+import type FloraConnectorPlugin from './main.js';
 
 export interface FloraConnectorSettings {
 	floraCoreUrl: string;

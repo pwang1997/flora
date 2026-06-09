@@ -1,5 +1,11 @@
 from flora_shared.document_events import DocumentIngestionEventPayload
-from models.document_versions import DocumentChangeType, DocumentVersionCreate, DocumentVersionRecord
+from models.document_versions import (
+    DocumentChangeType,
+    DocumentVersion,
+    DocumentVersionCreate,
+    DocumentVersionRecord,
+    serialize_document_version,
+)
 from models.documents import (
     SourceDocument,
     SourceDocumentCreate,
@@ -17,8 +23,10 @@ from models.sources import ProviderType, Source, SourceCreate, SourceRecord, Sou
 __all__ = [
     "DocumentChangeType",
     "DocumentIngestionEventPayload",
+    "DocumentVersion",
     "DocumentVersionCreate",
     "DocumentVersionRecord",
+    "serialize_document_version",
     "OutboxEventCreate",
     "OutboxEventRecord",
     "OutboxEventStatus",

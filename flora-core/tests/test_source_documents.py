@@ -21,7 +21,6 @@ def test_source_document_crud_endpoints(client) -> None:
             "external_id": "README.md",
             "title": "Readme",
             "uri": "https://example.com/README.md",
-            "content_hash": "hash-1",
             "metadata": {"folder": "docs"},
         },
     )
@@ -43,14 +42,12 @@ def test_source_document_crud_endpoints(client) -> None:
         f"/v1/source-documents/update/{document_id}",
         json={
             "title": "Updated readme",
-            "content_hash": "hash-2",
             "metadata": {"folder": "docs", "updated": True},
         },
     )
     assert update_response.status_code == 200
     updated = update_response.json()
     assert updated["title"] == "Updated readme"
-    assert updated["content_hash"] == "hash-2"
     assert updated["metadata"] == {"folder": "docs", "updated": True}
 
     delete_response = client.delete(f"/v1/source-documents/delete/{document_id}")
@@ -72,10 +69,26 @@ def test_source_document_create_returns_404_for_missing_source(client) -> None:
             "source_id": "missing-source",
             "external_id": "README.md",
             "title": "Readme",
-            "content_hash": "hash-1",
             "metadata": {},
         },
     )
 
     assert response.status_code == 404
     assert response.json()["detail"] == "source not found"
+
+
+def test_source_document_create_rejects_content_hash(client) -> None:
+    source_id = _create_source(client, "Content Hash Rejected")
+
+    response = client.post(
+        "/v1/source-documents/create",
+        json={
+            "source_id": source_id,
+            "external_id": "README.md",
+            "title": "Readme",
+            "content_hash": "hash-1",
+            "metadata": {},
+        },
+    )
+
+    assert response.status_code == 422
