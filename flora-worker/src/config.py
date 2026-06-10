@@ -1,6 +1,6 @@
+import os
 from pathlib import Path
 from typing import Literal
-
 from flora_shared import DEFAULT_DOCUMENT_INGESTION_TOPIC
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,12 +10,13 @@ REPO_ROOT = WORKER_ROOT.parent
 
 
 class Settings(BaseSettings):
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://flora:flora@localhost:5400/flora"
 
     kafka_bootstrap_servers: str = Field(
-        "",
+        os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
         validation_alias=AliasChoices("KAFKA_BOOTSTRAP_SERVER", "KAFKA_BOOTSTRAP_SERVERS"),
     )
     kafka_username: str = Field("", validation_alias="KAFKA_USERNAME")
@@ -42,7 +43,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_embedding_model: str = "text-embedding-3-small"
 
-    qdrant_host: str = Field("localhost", validation_alias="QDRANT_HOST")
+    qdrant_host: str = Field("http://localhost", validation_alias="QDRANT_HOST")
     qdrant_port: int = 6333
     qdrant_api_key: str = Field("", validation_alias="QDRANT_API_KEY")
     qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
@@ -63,4 +64,4 @@ class Settings(BaseSettings):
         return str(cafile)
 
 
-settings = Settings()
+settings = Settings(_env_file='.env', _env_file_encoding='utf-8')

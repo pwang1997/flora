@@ -20,8 +20,8 @@ class IngestionWorker:
         poll_interval_seconds: float = 2.0,
     ) -> None:
         self.consumer = consumer or SourceDocumentConsumer()
-        self.embedding_service = embedding_service or EmbeddingService()
-        self.vector_store = vector_store or QdrantVectorStore()
+        # self.embedding_service = embedding_service or EmbeddingService()
+        # self.vector_store = vector_store or QdrantVectorStore()
         self.poll_interval_seconds = poll_interval_seconds
 
     async def run_forever(self) -> None:
@@ -41,26 +41,28 @@ class IngestionWorker:
         return processed
 
     async def _process_payload(self, payload: DocumentIngestionEventPayload) -> None:
-        if payload.change_type == "deleted":
-            await self.vector_store.delete_document_version(payload.document_version_id)
-            return
+        print("process payload", payload)
+        return
+        # if payload.change_type == "deleted":
+        #     await self.vector_store.delete_document_version(payload.document_version_id)
+        #     return
 
-        vector = await self.embedding_service.embed(payload.content)
-        await self.vector_store.upsert_document_version(
-            document_version_id=payload.document_version_id,
-            vector=vector,
-            payload={
-                "source_document_id": payload.source_document_id,
-                "document_version_id": payload.document_version_id,
-                "source_id": payload.source_id,
-                "version_number": payload.version_number,
-                "change_type": payload.change_type,
-                "content_hash": payload.content_hash,
-                "title": payload.title,
-                "uri": payload.uri,
-                "metadata": payload.metadata,
-            },
-        )
+        # vector = await self.embedding_service.embed(payload.content)
+        # await self.vector_store.upsert_document_version(
+        #     document_version_id=payload.document_version_id,
+        #     vector=vector,
+        #     payload={
+        #         "source_document_id": payload.source_document_id,
+        #         "document_version_id": payload.document_version_id,
+        #         "source_id": payload.source_id,
+        #         "version_number": payload.version_number,
+        #         "change_type": payload.change_type,
+        #         "content_hash": payload.content_hash,
+        #         "title": payload.title,
+        #         "uri": payload.uri,
+        #         "metadata": payload.metadata,
+        #     },
+        # )
 
 
 class Worker:
@@ -72,7 +74,7 @@ class Worker:
         ingester: IngestionWorker | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
-        self.role = role or settings.worker_role
+        self.role = "all" # role or settings.worker_role
         self.publisher = publisher if self.role in ("publisher", "all") else None
         self.ingester = ingester if self.role in ("ingester", "all") else None
         if self.publisher is None and self.role in ("publisher", "all"):
