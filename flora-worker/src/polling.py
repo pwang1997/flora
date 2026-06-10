@@ -1,9 +1,10 @@
+from embeddings.base import EmbeddingProvider
+from embeddings.factory import create_embedding_provider
 import asyncio
 from typing import Literal
 
 from config import settings
 from consumers.source_document_consumer import SourceDocumentConsumer
-from embeddings import EmbeddingService
 from models import DocumentIngestionEventPayload
 from publishers.outbox_publisher import OutboxPublisher
 from vector_store import QdrantVectorStore
@@ -15,12 +16,12 @@ class IngestionWorker:
     def __init__(
         self,
         consumer: SourceDocumentConsumer | None = None,
-        embedding_service: EmbeddingService | None = None,
+        embedding_service: EmbeddingProvider | None = None,
         vector_store: QdrantVectorStore | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
         self.consumer = consumer or SourceDocumentConsumer()
-        # self.embedding_service = embedding_service or EmbeddingService()
+        self.embedding_service = create_embedding_provider(settings)
         # self.vector_store = vector_store or QdrantVectorStore()
         self.poll_interval_seconds = poll_interval_seconds
 
@@ -41,28 +42,34 @@ class IngestionWorker:
         return processed
 
     async def _process_payload(self, payload: DocumentIngestionEventPayload) -> None:
-        print("process payload", payload)
-        return
-        # if payload.change_type == "deleted":
-        #     await self.vector_store.delete_document_version(payload.document_version_id)
-        #     return
+        print("processing payload", payload)
 
-        # vector = await self.embedding_service.embed(payload.content)
-        # await self.vector_store.upsert_document_version(
-        #     document_version_id=payload.document_version_id,
-        #     vector=vector,
-        #     payload={
-        #         "source_document_id": payload.source_document_id,
-        #         "document_version_id": payload.document_version_id,
-        #         "source_id": payload.source_id,
-        #         "version_number": payload.version_number,
-        #         "change_type": payload.change_type,
-        #         "content_hash": payload.content_hash,
-        #         "title": payload.title,
-        #         "uri": payload.uri,
-        #         "metadata": payload.metadata,
-        #     },
-        # )
+        if payload.change_type == "deleted":
+            await self.vector_store.delete_document_version(payload.document_version_id)
+            return
+
+        print("embedding documents...")
+        vector = await self.embedding_service.embed_documents(payload.content)
+        print("document embedding completed...")
+
+
+        print("upserting vector into vector store")
+        await self.vector_store.upsert_document_version(
+            document_version_id=payload.document_version_id,
+            vector=vector,
+            payload={
+                "source_document_id": payload.source_document_id,
+                "document_version_id": payload.document_version_id,
+                "source_id": payload.source_id,
+                "version_number": payload.version_number,
+                "change_type": payload.change_type,
+                "content_hash": payload.content_hash,
+                "title": payload.title,
+                "uri": payload.uri,
+                "metadata": payload.metadata,
+            },
+        )
+        print("vector upsert completed")
 
 
 class Worker:

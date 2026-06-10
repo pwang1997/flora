@@ -40,8 +40,12 @@ class Settings(BaseSettings):
         validation_alias="WORKER_ROLE",
     )
 
-    openai_api_key: str = ""
-    openai_embedding_model: str = "text-embedding-3-small"
+    embedding_provider: str = Field(os.getenv("EMBEDDING_PROVIDER"), "openai")
+    embedding_model: str = Field(os.getenv("EMBEDDING_MODEL"), "text-embedding-3-small")
+    embedding_dimension: int | None = Field(os.getenv("EMBEDDING_DIMENSION"), None)
+    embedding_batch_size: int = Field(os.getenv("EMBEDDING_BATCH_SIZE"), 128)
+    openai_api_key: str | None = Field(os.getenv("OPENAI_API_KEY"), None)
+    jina_api_key: str | None = Field(os.getenv("JINA_API_KEY"), None)
 
     qdrant_host: str = Field("http://localhost", validation_alias="QDRANT_HOST")
     qdrant_port: int = 6333
