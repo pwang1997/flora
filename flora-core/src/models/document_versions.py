@@ -14,7 +14,7 @@ DocumentChangeType = Literal["created", "updated", "deleted", "restored"]
 
 class DocumentVersionCreate(BaseModel):
     document_id: str
-    content_hash: str = Field(..., min_length=1)
+    content_hash: str = Field(...)
     content: str = Field(..., min_length=1)
     change_type: DocumentChangeType = "created"
 

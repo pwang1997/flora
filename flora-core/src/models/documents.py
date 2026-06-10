@@ -1,3 +1,4 @@
+from pydantic import ConfigDict
 from utils.time_utils import utc_now
 
 from datetime import datetime
@@ -21,7 +22,7 @@ class SourceDocumentCreate(BaseModel):
     last_modified_at: datetime | None = None
     metadata_: dict[str, Any] = Field(default_factory=dict, alias="metadata")
 
-    model_config = {"populate_by_name": True, "extra": "forbid"}
+    model_config = ConfigDict(extra="allow")
 
 
 class SourceDocumentUpdate(BaseModel):
@@ -31,8 +32,8 @@ class SourceDocumentUpdate(BaseModel):
     status: SourceDocumentStatus | None = None
     metadata_: dict[str, Any] | None = Field(default=None, alias="metadata")
     last_seen_at: datetime | None = None
-
-    model_config = {"populate_by_name": True, "extra": "forbid"}
+    
+    model_config = ConfigDict(extra="allow")
 
 
 class SourceDocument(SourceDocumentCreate):

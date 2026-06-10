@@ -1,3 +1,5 @@
+import hashlib
+from services.documents import document_versions_service
 from datetime import UTC, datetime
 
 import repositories.documents.documents_repository as documents_repository
@@ -7,7 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.document_versions import DocumentVersionCreate, DocumentVersionRecord
+from models.document_versions import DocumentVersionCreate
 from models.documents import SourceDocumentCreate, SourceDocumentRecord, SourceDocumentUpdate
 
 
@@ -41,6 +43,14 @@ async def create_source_document(db: AsyncSession, payload: SourceDocumentCreate
 
     record = await documents_repository.create_source_document(db, payload)
     try:
+        content_hash = hashlib.sha256(payload.content.encode("utf-8")).hexdigest()
+        document_version = DocumentVersionCreate(
+            document_id=record.id,
+            content=payload.content,
+            content_hash=content_hash,
+            change_type="created",
+        )
+        await document_versions_service.create_document_version(db, document_version)
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
@@ -77,3 +87,5 @@ async def soft_delete_source_document(db: AsyncSession, document_id: str) -> Sou
     await db.commit()
     await db.refresh(record)
     return record
+
+

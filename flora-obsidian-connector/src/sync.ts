@@ -1,14 +1,12 @@
 import { App, FileSystemAdapter, Notice, TFile } from 'obsidian';
 import {
 	FloraApiError,
-	createDocumentVersion,
+	Source,
 	createSource,
 	createSourceDocument,
 	getSources,
-	listSourceDocuments,
-} from './api.js';
-import type { Source, SourceDocument } from './api.js';
-import type { FloraConnectorSettings } from './settings.js';
+} from './api';
+import { FloraConnectorSettings } from './settings';
 
 interface SyncResult {
 	created: number;
@@ -25,24 +23,17 @@ interface EffectiveSyncSettings {
 export async function syncVaultOnLoad(app: App, settings: FloraConnectorSettings): Promise<SyncResult> {
 	const effectiveSettings = resolveEffectiveSettings(app, settings);
 	const source = await resolveObsidianSource(effectiveSettings);
-	const existingDocuments = await listSourceDocuments(effectiveSettings.floraCoreUrl, source.id);
 	const files = app.vault.getMarkdownFiles();
 	const result: SyncResult = { created: 0, skipped: 0, failed: 0 };
 
 	// TODO: Replace load-time full sync with periodic and event-driven note update handling.
 	for (const file of files) {
 		try {
-			const document = await resolveSourceDocumentForFile(
-				effectiveSettings.floraCoreUrl,
-				source.id,
-				file,
-				existingDocuments,
-			);
-			await createVersionForFile(app, effectiveSettings.floraCoreUrl, document.id, file);
+			await createDocumentForFile(app, effectiveSettings.floraCoreUrl, source.id, file);
 			result.created += 1;
 		} catch (error) {
 			if (error instanceof FloraApiError && error.status === 409) {
-				// TODO: Compare latest document version before deciding whether to create updated versions.
+				// TODO: Create document versions or update source_documents when note content changes.
 				result.skipped += 1;
 				continue;
 			}
@@ -108,15 +99,20 @@ function findMatchingSource(sources: Source[], sourcePath: string): Source | und
 }
 
 async function createDocumentForFile(
+	app: App,
 	floraCoreUrl: string,
 	sourceId: string,
 	file: TFile,
-): Promise<SourceDocument> {
-	return await createSourceDocument(floraCoreUrl, {
+): Promise<void> {
+	const content = await app.vault.read(file);
+
+	// TODO: Send full content through document-version ingestion when flora-core exposes that workflow.
+	await createSourceDocument(floraCoreUrl, {
 		source_id: sourceId,
 		external_id: file.path,
 		title: file.basename,
 		uri: `obsidian://open?path=${encodeURIComponent(file.path)}`,
+		content : content,
 		last_modified_at: new Date(file.stat.mtime).toISOString(),
 		metadata: {
 			path: file.path,
@@ -127,53 +123,4 @@ async function createDocumentForFile(
 			mtime: file.stat.mtime,
 		},
 	});
-}
-
-async function resolveSourceDocumentForFile(
-	floraCoreUrl: string,
-	sourceId: string,
-	file: TFile,
-	existingDocuments: SourceDocument[],
-): Promise<SourceDocument> {
-	const existingDocument = existingDocuments.find((document) => document.external_id === file.path);
-	if (existingDocument) return existingDocument;
-
-	try {
-		const createdDocument = await createDocumentForFile(floraCoreUrl, sourceId, file);
-		existingDocuments.push(createdDocument);
-		return createdDocument;
-	} catch (error) {
-		if (error instanceof FloraApiError && error.status === 409) {
-			const refreshedDocuments = await listSourceDocuments(floraCoreUrl, sourceId);
-			const refreshedDocument = refreshedDocuments.find((document) => document.external_id === file.path);
-			if (refreshedDocument) return refreshedDocument;
-		}
-		throw error;
-	}
-}
-
-async function createVersionForFile(
-	app: App,
-	floraCoreUrl: string,
-	documentId: string,
-	file: TFile,
-): Promise<void> {
-	const content = await app.vault.read(file);
-	const contentHash = await sha256Hex(content);
-
-	// TODO: Use updated/deleted/restored change types when event-driven note updates are implemented.
-	await createDocumentVersion(floraCoreUrl, {
-		document_id: documentId,
-		content,
-		content_hash: contentHash,
-		change_type: 'created',
-	});
-}
-
-async function sha256Hex(content: string): Promise<string> {
-	const bytes = new TextEncoder().encode(content);
-	const digest = await crypto.subtle.digest('SHA-256', bytes);
-	return Array.from(new Uint8Array(digest))
-		.map((byte) => byte.toString(16).padStart(2, '0'))
-		.join('');
 }

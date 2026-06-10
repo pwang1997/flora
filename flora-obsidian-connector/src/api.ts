@@ -31,6 +31,7 @@ export interface SourceDocument {
 	external_id: string;
 	title: string;
 	uri: string | null;
+	content_hash: string;
 	metadata: Record<string, unknown>;
 }
 
@@ -39,25 +40,9 @@ export interface SourceDocumentCreateRequest {
 	external_id: string;
 	title: string;
 	uri: string;
+	content : string;
 	last_modified_at: string | null;
 	metadata: Record<string, unknown>;
-}
-
-export interface DocumentVersion {
-	id: string;
-	document_id: string;
-	content_hash: string;
-	content: string;
-	change_type: 'created' | 'updated' | 'deleted' | 'restored';
-	version_number: number;
-	created_at: string;
-}
-
-export interface DocumentVersionCreateRequest {
-	document_id: string;
-	content_hash: string;
-	content: string;
-	change_type: 'created' | 'updated' | 'deleted' | 'restored';
 }
 
 export class FloraApiError extends Error {
@@ -137,20 +122,6 @@ export function createSource(baseUrl: string, payload: SourceCreateRequest) {
 
 export function createSourceDocument(baseUrl: string, payload: SourceDocumentCreateRequest) {
 	return fetchJson<SourceDocument>(baseUrl, '/v1/source-documents/create', {
-		method: 'POST',
-		body: JSON.stringify(payload),
-	});
-}
-
-export function listSourceDocuments(baseUrl: string, sourceId: string) {
-	return fetchJson<SourceDocument[]>(
-		baseUrl,
-		`/v1/source-documents/list?source_id=${encodeURIComponent(sourceId)}`,
-	);
-}
-
-export function createDocumentVersion(baseUrl: string, payload: DocumentVersionCreateRequest) {
-	return fetchJson<DocumentVersion>(baseUrl, '/v1/document-versions/create', {
 		method: 'POST',
 		body: JSON.stringify(payload),
 	});
