@@ -40,17 +40,17 @@ class Settings(BaseSettings):
         validation_alias="WORKER_ROLE",
     )
 
-    embedding_provider: str = Field(os.getenv("EMBEDDING_PROVIDER"), "openai")
-    embedding_model: str = Field(os.getenv("EMBEDDING_MODEL"), "text-embedding-3-small")
-    embedding_dimension: int | None = Field(os.getenv("EMBEDDING_DIMENSION"), None)
-    embedding_batch_size: int = Field(os.getenv("EMBEDDING_BATCH_SIZE"), 128)
-    openai_api_key: str | None = Field(os.getenv("OPENAI_API_KEY"), None)
-    jina_api_key: str | None = Field(os.getenv("JINA_API_KEY"), None)
+    embedding_provider: str = os.getenv("EMBEDDING_PROVIDER")
+    embedding_model: str = os.getenv("EMBEDDING_MODEL")
+    embedding_dimension: int | None = os.getenv("EMBEDDING_DIMENSION")
+    embedding_batch_size: int = os.getenv("EMBEDDING_BATCH_SIZE")
+    openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
+    jina_api_key: str | None = os.getenv("JINA_API_KEY")
 
-    qdrant_host: str = Field("http://localhost", validation_alias="QDRANT_HOST")
+    qdrant_host: str = os.getenv("QDRANT_HOST")
     qdrant_port: int = 6333
-    qdrant_api_key: str = Field("", validation_alias="QDRANT_API_KEY")
-    qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
+    qdrant_api_key: str = os.getenv("QDRANT_API_KEY")
+    # qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
     qdrant_vector_size: int = Field(1536, validation_alias="QDRANT_VECTOR_SIZE")
     qdrant_distance: str = Field("Cosine", validation_alias="QDRANT_DISTANCE")
 

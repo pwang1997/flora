@@ -1,4 +1,4 @@
-from embeddings.base import EmbeddingProvider
+import uuid
 from embeddings.factory import create_embedding_provider
 import asyncio
 from typing import Literal
@@ -16,13 +16,11 @@ class IngestionWorker:
     def __init__(
         self,
         consumer: SourceDocumentConsumer | None = None,
-        embedding_service: EmbeddingProvider | None = None,
-        vector_store: QdrantVectorStore | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
         self.consumer = consumer or SourceDocumentConsumer()
         self.embedding_service = create_embedding_provider(settings)
-        # self.vector_store = vector_store or QdrantVectorStore()
+        self.vector_store = QdrantVectorStore()
         self.poll_interval_seconds = poll_interval_seconds
 
     async def run_forever(self) -> None:
@@ -43,19 +41,24 @@ class IngestionWorker:
 
     async def _process_payload(self, payload: DocumentIngestionEventPayload) -> None:
         print("processing payload", payload)
+        collection_name = f"source_{payload.source_id}"
 
         if payload.change_type == "deleted":
-            await self.vector_store.delete_document_version(payload.document_version_id)
+            await self.vector_store.delete_document_version(
+                collection_name=collection_name,
+                document_version_id=payload.document_version_id,
+            )
             return
 
         print("embedding documents...")
         vector = await self.embedding_service.embed_documents(payload.content)
         print("document embedding completed...")
 
-
+        self.vector_store.create_collection_if_not_exists(collection_name)
         print("upserting vector into vector store")
         await self.vector_store.upsert_document_version(
-            document_version_id=payload.document_version_id,
+            collection_name=collection_name,
+            document_version_id=uuid.uuid7(),
             vector=vector,
             payload={
                 "source_document_id": payload.source_document_id,
@@ -64,6 +67,7 @@ class IngestionWorker:
                 "version_number": payload.version_number,
                 "change_type": payload.change_type,
                 "content_hash": payload.content_hash,
+                "content" : payload.content,
                 "title": payload.title,
                 "uri": payload.uri,
                 "metadata": payload.metadata,

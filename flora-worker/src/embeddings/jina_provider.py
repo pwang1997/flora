@@ -9,7 +9,7 @@ from embeddings.base import EmbeddingModelInfo
 
 
 _JINA_DEFAULT_DIMENSIONS: dict[str, int] = {
-    "jina-embeddings-v3": 1024,
+    "jina-embeddings-v3": 1536,
     "jina-embeddings-v4": 2048,
 }
 
@@ -34,7 +34,7 @@ class JinaEmbeddingProvider:
 
         self._api_key = api_key
         self._model = model
-        self._dimension = dimension or _JINA_DEFAULT_DIMENSIONS.get(model)
+        self._dimension =  1536 # dimension or _JINA_DEFAULT_DIMENSIONS.get(model)
 
         if self._dimension is None:
             raise ValueError(
@@ -143,12 +143,15 @@ class JinaEmbeddingProvider:
         if not isinstance(text, str):
             raise TypeError("Embedding input must be a string")
 
-        if not text.strip():
-            raise ValueError("Embedding input cannot be empty")
+        # if not text.strip():
+        #     raise ValueError("Embedding input cannot be empty")
 
     def _validate_texts(self, texts: Sequence[str]) -> None:
         if not texts:
             raise ValueError("texts cannot be empty")
+
+        if not isinstance(texts, list):
+            texts = [texts]
 
         for text in texts:
             self._validate_text(text)
