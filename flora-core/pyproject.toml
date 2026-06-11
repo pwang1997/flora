@@ -2,7 +2,7 @@
 name = "flora-core"
 version = "0.1.0"
 description = "Flora core FastAPI service"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
   "fastapi>=0.115.0",
   "httpx>=0.27.0",
@@ -42,4 +42,4 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
