@@ -19,11 +19,6 @@ def _serialize_value(payload: dict) -> bytes:
 def build_kafka_producer() -> KafkaProducer:
     return KafkaProducer(
         bootstrap_servers=settings.kafka_bootstrap_servers,
-        sasl_mechanism=settings.kafka_sasl_mechanism,
-        sasl_plain_username=settings.kafka_username,
-        sasl_plain_password=settings.kafka_password,
-        # security_protocol="SASL_SSL",
-        # ssl_cafile=settings.kafka_ssl_cafile,
         client_id=settings.kafka_producer_client_id,
         key_serializer=_serialize_key,
         value_serializer=_serialize_value,

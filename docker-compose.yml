@@ -29,8 +29,8 @@ services:
 
   flora-worker:
     build:
-      context: ./flora-worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: flora-worker/Dockerfile
 
   flora-ui:
     build:

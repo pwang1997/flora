@@ -23,8 +23,6 @@ def build_kafka_consumer() -> KafkaConsumer:
         sasl_mechanism=settings.kafka_sasl_mechanism,
         sasl_plain_username=settings.kafka_username,
         sasl_plain_password=settings.kafka_password,
-        # security_protocol="SASL_SSL",
-        # ssl_cafile=settings.kafka_ssl_cafile,
         value_deserializer=lambda value: json.loads(value.decode("utf-8")),
         key_deserializer=lambda value: value.decode("utf-8") if value else None,
         security_protocol="SSL",
@@ -58,7 +56,7 @@ class SourceDocumentConsumer:
 
     async def commit(self, event: "ConsumedDocumentEvent") -> None:
         partition = TopicPartition(event.topic, event.partition)
-        offsets = {partition: OffsetAndMetadata(event.offset + 1, "")}
+        offsets = {partition: OffsetAndMetadata(event.offset + 1, "", -1)}
         await asyncio.to_thread(self._consumer.commit, offsets=offsets)
 
     async def close(self) -> None:

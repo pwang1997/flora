@@ -14,9 +14,27 @@ DocumentChangeType = Literal["created", "updated", "deleted", "restored"]
 
 class DocumentVersionCreate(BaseModel):
     document_id: str
-    content_hash: str = Field(..., min_length=1)
+    content_hash: str = Field(...)
     content: str = Field(..., min_length=1)
     change_type: DocumentChangeType = "created"
+
+
+class DocumentVersion(DocumentVersionCreate):
+    id: str
+    version_number: int
+    created_at: datetime
+
+
+def serialize_document_version(record: "DocumentVersionRecord") -> DocumentVersion:
+    return DocumentVersion(
+        id=record.id,
+        document_id=record.document_id,
+        content_hash=record.content_hash,
+        content=record.content,
+        change_type=record.change_type,
+        version_number=record.version_number,
+        created_at=record.created_at,
+    )
 
 
 class DocumentVersionRecord(Base):

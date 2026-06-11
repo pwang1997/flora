@@ -12,6 +12,7 @@ from repositories.documents.documents_repository import (
     create_source_document,
     get_document_version,
     get_document_version_by_number,
+    get_latest_document_version,
     get_latest_version_number,
     get_source_document,
     get_source_document_by_external_id,
@@ -41,7 +42,6 @@ async def test_source_document_repository_crud(async_db: AsyncSession) -> None:
             external_id="note-1",
             title="Alpha note",
             uri="obsidian://note-1",
-            content_hash="hash-1",
             last_modified_at=datetime.now(UTC),
             metadata={"folder": "alpha"},
         ),
@@ -59,12 +59,11 @@ async def test_source_document_repository_crud(async_db: AsyncSession) -> None:
     updated = await update_source_document(
         async_db,
         created.id,
-        SourceDocumentUpdate(title="Updated note", content_hash="hash-2"),
+        SourceDocumentUpdate(title="Updated note"),
     )
     await async_db.commit()
     assert updated is not None
     assert updated.title == "Updated note"
-    assert updated.content_hash == "hash-2"
 
     listed = await list_source_documents(async_db, source.id)
     assert [document.id for document in listed] == [created.id]
@@ -88,7 +87,6 @@ async def test_source_document_repository_enforces_unique_external_id(async_db: 
             source_id=source.id,
             external_id="same-id",
             title="First",
-            content_hash="hash-1",
             metadata={},
         ),
     )
@@ -101,7 +99,6 @@ async def test_source_document_repository_enforces_unique_external_id(async_db: 
                 source_id=source.id,
                 external_id="same-id",
                 title="Second",
-                content_hash="hash-2",
                 metadata={},
             ),
         )
@@ -124,7 +121,6 @@ async def test_document_version_repository_create_and_list(async_db: AsyncSessio
             source_id=source.id,
             external_id="README.md",
             title="Readme",
-            content_hash="doc-hash",
             metadata={},
         ),
     )
@@ -165,6 +161,11 @@ async def test_document_version_repository_create_and_list(async_db: AsyncSessio
     listed = await list_document_versions(async_db, document.id)
     assert [version.version_number for version in listed] == [1, 2]
 
+    latest = await get_latest_document_version(async_db, document.id)
+    assert latest is not None
+    assert latest.id == version_two.id
+    assert latest.content_hash == "version-hash-2"
+
 
 @pytest.mark.anyio
 async def test_document_version_repository_enforces_unique_content_hash(async_db: AsyncSession) -> None:
@@ -182,7 +183,6 @@ async def test_document_version_repository_enforces_unique_content_hash(async_db
             source_id=source.id,
             external_id="guide.md",
             title="Guide",
-            content_hash="doc-hash",
             metadata={},
         ),
     )

@@ -1,3 +1,5 @@
+import hashlib
+from services.documents import document_versions_service
 from datetime import UTC, datetime
 
 import repositories.documents.documents_repository as documents_repository
@@ -7,7 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.document_versions import DocumentVersionCreate, DocumentVersionRecord
+from models.document_versions import DocumentVersionCreate
 from models.documents import SourceDocumentCreate, SourceDocumentRecord, SourceDocumentUpdate
 
 
@@ -41,6 +43,14 @@ async def create_source_document(db: AsyncSession, payload: SourceDocumentCreate
 
     record = await documents_repository.create_source_document(db, payload)
     try:
+        content_hash = hashlib.sha256(payload.content.encode("utf-8")).hexdigest()
+        document_version = DocumentVersionCreate(
+            document_id=record.id,
+            content=payload.content,
+            content_hash=content_hash,
+            change_type="created",
+        )
+        await document_versions_service.create_document_version(db, document_version)
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
@@ -79,39 +89,3 @@ async def soft_delete_source_document(db: AsyncSession, document_id: str) -> Sou
     return record
 
 
-async def list_document_versions(db: AsyncSession, document_id: str) -> list[DocumentVersionRecord]:
-    return await documents_repository.list_document_versions(db, document_id)
-
-
-async def get_document_version(db: AsyncSession, version_id: str) -> DocumentVersionRecord | None:
-    return await documents_repository.get_document_version(db, version_id)
-
-
-async def get_document_version_by_number(
-    db: AsyncSession, document_id: str, version_number: int
-) -> DocumentVersionRecord | None:
-    return await documents_repository.get_document_version_by_number(db, document_id, version_number)
-
-
-async def create_document_version(db: AsyncSession, payload: DocumentVersionCreate) -> DocumentVersionRecord:
-    document = await documents_repository.get_source_document(db, payload.document_id)
-    if document is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="source document not found")
-
-    next_version_number = await documents_repository.get_latest_version_number(db, payload.document_id) + 1
-    record = await documents_repository.create_document_version(db, payload, next_version_number)
-    await outbox_service.create_document_ingestion_event(
-        db,
-        document=document,
-        version=record,
-    )
-    try:
-        await db.commit()
-    except IntegrityError as exc:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="document version content_hash must be unique within a document",
-        ) from exc
-    await db.refresh(record)
-    return record

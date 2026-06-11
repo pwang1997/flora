@@ -23,7 +23,6 @@ async def test_build_document_ingestion_event_serializes_expected_payload(async_
             source_id=source.id,
             external_id="README.md",
             title="Readme",
-            content_hash="doc-hash",
             metadata={"folder": "docs"},
         ),
     )
@@ -60,7 +59,6 @@ async def test_create_document_version_stages_outbox_event_in_same_transaction(a
             source_id=source.id,
             external_id="guide.md",
             title="Guide",
-            content_hash="doc-hash",
             metadata={},
         ),
     )
