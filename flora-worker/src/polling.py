@@ -51,7 +51,8 @@ class IngestionWorker:
             return
 
         print("embedding documents...")
-        vector = await self.embedding_service.embed_documents(payload.content)
+        vectors = await self.embedding_service.embed_documents([payload.content])
+        vector = vectors[0]
         print("document embedding completed...")
 
         self.vector_store.create_collection_if_not_exists(collection_name)

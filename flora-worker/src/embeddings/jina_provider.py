@@ -9,7 +9,7 @@ from embeddings.base import EmbeddingModelInfo
 
 
 _JINA_DEFAULT_DIMENSIONS: dict[str, int] = {
-    "jina-embeddings-v3": 1536,
+    "jina-embeddings-v3": 1024,
     "jina-embeddings-v4": 2048,
 }
 
@@ -34,7 +34,7 @@ class JinaEmbeddingProvider:
 
         self._api_key = api_key
         self._model = model
-        self._dimension =  1536 # dimension or _JINA_DEFAULT_DIMENSIONS.get(model)
+        self._dimension = dimension or _JINA_DEFAULT_DIMENSIONS.get(model)
 
         if self._dimension is None:
             raise ValueError(
