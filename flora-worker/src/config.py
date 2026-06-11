@@ -57,14 +57,14 @@ class Settings(BaseSettings):
     @classmethod
     def resolve_kafka_ssl_cafile(cls, value: str) -> str:
         cafile = Path(value).expanduser()
-        if cafile.is_absolute() or cafile.exists():
+        if cafile.is_absolute():
             return str(cafile)
 
-        worker_relative = WORKER_ROOT / cafile
-        if worker_relative.exists():
-            return str(worker_relative)
+        if cafile.exists():
+            return str(cafile.resolve())
 
-        return str(cafile)
+        worker_relative = WORKER_ROOT / cafile
+        return str(worker_relative)
 
 
 settings = Settings(_env_file='.env', _env_file_encoding='utf-8')
