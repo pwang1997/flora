@@ -3,8 +3,8 @@ from datetime import timedelta
 import pytest
 from sqlalchemy import insert
 
-from flora_worker.publishers.outbox_publisher import OutboxPublisher
-from flora_worker.repositories.outbox.outbox_repository import (
+from publishers.outbox_publisher import OutboxPublisher
+from repositories.outbox.outbox_repository import (
     claim_due_events,
     list_outbox_events,
     mark_outbox_event_failed,

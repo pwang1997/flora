@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from flora_worker.consumers.source_document_consumer import ConsumedDocumentEvent
-from flora_worker.models import DocumentIngestionEventPayload
-from flora_worker.polling import IngestionWorker, Worker
+from consumers.source_document_consumer import ConsumedDocumentEvent
+from models import DocumentIngestionEventPayload
+from polling import IngestionWorker, Worker
 
 
 class FakeConsumer:
@@ -25,11 +25,11 @@ class FakeEmbeddingService:
         self.should_fail = should_fail
         self.inputs: list[str] = []
 
-    async def embed(self, text: str) -> list[float]:
+    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
         if self.should_fail:
             raise RuntimeError("embedding failed")
-        self.inputs.append(text)
-        return [0.1, 0.2, 0.3]
+        self.inputs.extend(texts)
+        return [[0.1, 0.2, 0.3] for _ in texts]
 
 
 class FakeVectorStore:
@@ -37,10 +37,20 @@ class FakeVectorStore:
         self.upserts: list[tuple[str, list[float], dict]] = []
         self.deletes: list[str] = []
 
-    async def upsert_document_version(self, *, document_version_id: str, vector: list[float], payload: dict) -> None:
+    def create_collection_if_not_exists(self, collection_name: str) -> None:
+        return None
+
+    async def upsert_document_version(
+        self,
+        *,
+        collection_name: str,
+        document_version_id: str,
+        vector: list[float],
+        payload: dict,
+    ) -> None:
         self.upserts.append((document_version_id, vector, payload))
 
-    async def delete_document_version(self, document_version_id: str) -> None:
+    async def delete_document_version(self, *, collection_name: str, document_version_id: str) -> None:
         self.deletes.append(document_version_id)
 
 

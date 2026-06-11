@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from flora_worker.repositories.outbox.outbox_repository import metadata
+from repositories.outbox.outbox_repository import metadata
 
 
 @pytest.fixture

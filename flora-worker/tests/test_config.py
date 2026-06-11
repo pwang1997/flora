@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flora_worker.config import REPO_ROOT, Settings, WORKER_ROOT
+from config import REPO_ROOT, Settings, WORKER_ROOT
 
 
 def test_settings_load_repo_root_env(monkeypatch) -> None:

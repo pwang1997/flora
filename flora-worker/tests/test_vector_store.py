@@ -1,6 +1,7 @@
 from qdrant_client import models
 
-from flora_worker.vector_store import QdrantVectorStore
+from config import settings
+from vector_store import QdrantVectorStore
 
 
 class FakeQdrantClient:
@@ -26,19 +27,21 @@ class FakeQdrantClient:
 
 def test_vector_store_creates_collection_when_absent() -> None:
     client = FakeQdrantClient(collection_exists=False)
+    vector_store = QdrantVectorStore(client=client)
 
-    QdrantVectorStore(client=client)
+    vector_store.create_collection_if_not_exists("source_src_1")
 
     assert len(client.created_collections) == 1
     collection_name, vectors_config = client.created_collections[0]
-    assert collection_name == "flora_documents"
-    assert vectors_config.size == 1536
+    assert collection_name == "source_src_1"
+    assert vectors_config.size == settings.qdrant_vector_size
     assert vectors_config.distance == models.Distance.COSINE
 
 
 def test_vector_store_does_not_create_existing_collection() -> None:
     client = FakeQdrantClient(collection_exists=True)
+    vector_store = QdrantVectorStore(client=client)
 
-    QdrantVectorStore(client=client)
+    vector_store.create_collection_if_not_exists("source_src_1")
 
     assert client.created_collections == []

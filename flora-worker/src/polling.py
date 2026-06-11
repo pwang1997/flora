@@ -1,4 +1,3 @@
-import uuid
 from embeddings.factory import create_embedding_provider
 import asyncio
 from typing import Literal
@@ -16,11 +15,13 @@ class IngestionWorker:
     def __init__(
         self,
         consumer: SourceDocumentConsumer | None = None,
+        embedding_service=None,
+        vector_store: QdrantVectorStore | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
         self.consumer = consumer or SourceDocumentConsumer()
-        self.embedding_service = create_embedding_provider(settings)
-        self.vector_store = QdrantVectorStore()
+        self.embedding_service = embedding_service or create_embedding_provider(settings)
+        self.vector_store = vector_store or QdrantVectorStore()
         self.poll_interval_seconds = poll_interval_seconds
 
     async def run_forever(self) -> None:
@@ -59,7 +60,7 @@ class IngestionWorker:
         print("upserting vector into vector store")
         await self.vector_store.upsert_document_version(
             collection_name=collection_name,
-            document_version_id=uuid.uuid7(),
+            document_version_id=payload.document_version_id,
             vector=vector,
             payload={
                 "source_document_id": payload.source_document_id,
@@ -86,7 +87,7 @@ class Worker:
         ingester: IngestionWorker | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
-        self.role = "all" # role or settings.worker_role
+        self.role = role or "all"
         self.publisher = publisher if self.role in ("publisher", "all") else None
         self.ingester = ingester if self.role in ("ingester", "all") else None
         if self.publisher is None and self.role in ("publisher", "all"):

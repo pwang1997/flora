@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from flora_worker.consumers.source_document_consumer import SourceDocumentConsumer
+from consumers.source_document_consumer import SourceDocumentConsumer
 
 
 class FakeKafkaConsumer:

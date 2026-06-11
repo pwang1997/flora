@@ -1,11 +1,10 @@
-import os
 from pathlib import Path
 from typing import Literal
 from flora_shared import DEFAULT_DOCUMENT_INGESTION_TOPIC
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-WORKER_ROOT = Path(__file__).resolve().parents[2]
+WORKER_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = WORKER_ROOT.parent
 
 
@@ -16,7 +15,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://flora:flora@localhost:5400/flora"
 
     kafka_bootstrap_servers: str = Field(
-        os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
+        "localhost:9092",
         validation_alias=AliasChoices("KAFKA_BOOTSTRAP_SERVER", "KAFKA_BOOTSTRAP_SERVERS"),
     )
     kafka_username: str = Field("", validation_alias="KAFKA_USERNAME")
@@ -40,18 +39,18 @@ class Settings(BaseSettings):
         validation_alias="WORKER_ROLE",
     )
 
-    embedding_provider: str = os.getenv("EMBEDDING_PROVIDER")
-    embedding_model: str = os.getenv("EMBEDDING_MODEL")
-    embedding_dimension: int | None = os.getenv("EMBEDDING_DIMENSION")
-    embedding_batch_size: int = os.getenv("EMBEDDING_BATCH_SIZE")
-    openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
-    jina_api_key: str | None = os.getenv("JINA_API_KEY")
+    embedding_provider: str = Field("jina", validation_alias="EMBEDDING_PROVIDER")
+    embedding_model: str = Field("jina-embeddings-v3", validation_alias="EMBEDDING_MODEL")
+    embedding_dimension: int | None = Field(None, validation_alias="EMBEDDING_DIMENSION")
+    embedding_batch_size: int = Field(128, validation_alias="EMBEDDING_BATCH_SIZE")
+    openai_api_key: str | None = Field(None, validation_alias="OPENAI_API_KEY")
+    jina_api_key: str | None = Field(None, validation_alias="JINA_API_KEY")
 
-    qdrant_host: str = os.getenv("QDRANT_HOST")
+    qdrant_host: str = Field("http://localhost", validation_alias="QDRANT_HOST")
     qdrant_port: int = 6333
-    qdrant_api_key: str = os.getenv("QDRANT_API_KEY")
+    qdrant_api_key: str | None = Field(None, validation_alias="QDRANT_API_KEY")
     # qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
-    qdrant_vector_size: int = Field(1536, validation_alias="QDRANT_VECTOR_SIZE")
+    qdrant_vector_size: int = Field(1024, validation_alias="QDRANT_VECTOR_SIZE")
     qdrant_distance: str = Field("Cosine", validation_alias="QDRANT_DISTANCE")
 
     @field_validator("kafka_ssl_cafile", mode="after")
