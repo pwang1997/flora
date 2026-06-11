@@ -16,6 +16,7 @@ def _create_source_and_document(client) -> tuple[str, str]:
             "source_id": source_id,
             "external_id": "README.md",
             "title": "Readme",
+            "content": "Document shell content",
             "metadata": {"folder": "docs"},
         },
     )
@@ -37,7 +38,7 @@ def test_document_version_create_list_get_and_latest_endpoints(client) -> None:
     )
     assert first_response.status_code == 201
     first = first_response.json()
-    assert first["version_number"] == 1
+    assert first["version_number"] == 2
     assert first["content"] == "Initial content"
 
     second_response = client.post(
@@ -51,11 +52,11 @@ def test_document_version_create_list_get_and_latest_endpoints(client) -> None:
     )
     assert second_response.status_code == 201
     second = second_response.json()
-    assert second["version_number"] == 2
+    assert second["version_number"] == 3
 
     list_response = client.get("/v1/document-versions/list", params={"document_id": document_id})
     assert list_response.status_code == 200
-    assert [version["id"] for version in list_response.json()] == [first["id"], second["id"]]
+    assert [version["id"] for version in list_response.json()][-2:] == [first["id"], second["id"]]
 
     get_response = client.get(f"/v1/document-versions/get/{first['id']}")
     assert get_response.status_code == 200

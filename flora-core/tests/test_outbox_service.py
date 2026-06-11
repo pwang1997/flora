@@ -4,9 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.document_versions import DocumentVersionCreate
 from models.sources import SourceCreate
 from models.documents import SourceDocumentCreate
+from repositories.documents.documents_repository import create_source_document as create_source_document_record
 from repositories.outbox.outbox_repository import list_outbox_events
 from repositories.sources.sources_repository import create_source
-from services.documents.documents_service import create_document_version, create_source_document
+from services.documents.document_versions_service import create_document_version
 from services.outbox.outbox_service import build_document_ingestion_event
 
 
@@ -17,7 +18,7 @@ async def test_build_document_ingestion_event_serializes_expected_payload(async_
         SourceCreate(name="Payload Source", provider_type="github", config={"source_path": "/payload"}),
     )
     await async_db.commit()
-    document = await create_source_document(
+    document = await create_source_document_record(
         async_db,
         SourceDocumentCreate(
             source_id=source.id,
@@ -53,7 +54,7 @@ async def test_create_document_version_stages_outbox_event_in_same_transaction(a
         SourceCreate(name="Version Source", provider_type="github", config={"source_path": "/versions"}),
     )
     await async_db.commit()
-    document = await create_source_document(
+    document = await create_source_document_record(
         async_db,
         SourceDocumentCreate(
             source_id=source.id,

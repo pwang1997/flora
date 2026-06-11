@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 
 import repositories.documents.documents_repository as documents_repository
 import repositories.sources.sources_repository as sources_repository
-import services.outbox.outbox_service as outbox_service
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,5 +86,4 @@ async def soft_delete_source_document(db: AsyncSession, document_id: str) -> Sou
     await db.commit()
     await db.refresh(record)
     return record
-
 

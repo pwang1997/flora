@@ -7,16 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.document_versions import DocumentVersionCreate
 from models.documents import SourceDocumentCreate, SourceDocumentUpdate
 from models.sources import SourceCreate
-from repositories.documents.documents_repository import (
+from repositories.documents.document_versions_repository import (
     create_document_version,
-    create_source_document,
     get_document_version,
     get_document_version_by_number,
     get_latest_document_version,
     get_latest_version_number,
+    list_document_versions,
+)
+from repositories.documents.documents_repository import (
+    create_source_document,
     get_source_document,
     get_source_document_by_external_id,
-    list_document_versions,
     list_source_documents,
     update_source_document,
 )

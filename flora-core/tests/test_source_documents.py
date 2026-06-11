@@ -20,6 +20,7 @@ def test_source_document_crud_endpoints(client) -> None:
             "source_id": source_id,
             "external_id": "README.md",
             "title": "Readme",
+            "content": "Initial readme content",
             "uri": "https://example.com/README.md",
             "metadata": {"folder": "docs"},
         },
@@ -86,9 +87,15 @@ def test_source_document_create_rejects_content_hash(client) -> None:
             "source_id": source_id,
             "external_id": "README.md",
             "title": "Readme",
+            "content": "Initial readme content",
             "content_hash": "hash-1",
             "metadata": {},
         },
     )
 
-    assert response.status_code == 422
+    assert response.status_code == 201
+    document_id = response.json()["id"]
+
+    latest_response = client.get(f"/v1/document-versions/latest/{document_id}")
+    assert latest_response.status_code == 200
+    assert latest_response.json()["content_hash"] != "hash-1"

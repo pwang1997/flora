@@ -1,9 +1,8 @@
 from uuid import uuid4
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.document_versions import DocumentVersionCreate, DocumentVersionRecord
 from models.documents import SourceDocumentCreate, SourceDocumentRecord, SourceDocumentUpdate
 
 

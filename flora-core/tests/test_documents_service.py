@@ -9,11 +9,13 @@ from models.documents import SourceDocumentCreate, SourceDocumentUpdate
 from models.sources import SourceCreate
 from repositories.outbox.outbox_repository import list_outbox_events
 from repositories.sources.sources_repository import create_source
-from services.documents.documents_service import (
+from services.documents.document_versions_service import (
     create_document_version,
-    create_source_document,
     get_document_version_by_number,
     list_document_versions,
+)
+from services.documents.documents_service import (
+    create_source_document,
     soft_delete_source_document,
     update_source_document,
 )
@@ -54,6 +56,7 @@ async def test_create_source_document_rejects_duplicate_external_id(async_db: As
             source_id=source.id,
             external_id="doc-1",
             title="Document",
+            content="Initial content",
             metadata={},
         ),
     )
@@ -65,6 +68,7 @@ async def test_create_source_document_rejects_duplicate_external_id(async_db: As
                 source_id=source.id,
                 external_id="doc-1",
                 title="Document 2",
+                content="Duplicate content",
                 metadata={},
             ),
         )
@@ -91,6 +95,7 @@ async def test_update_and_soft_delete_source_document(async_db: AsyncSession) ->
             source_id=source.id,
             external_id="page-1",
             title="Original title",
+            content="Original content",
             metadata={"source": "notion"},
         ),
     )
@@ -131,6 +136,7 @@ async def test_create_document_version_assigns_next_version(async_db: AsyncSessi
             source_id=source.id,
             external_id="README.md",
             title="Readme",
+            content="Document shell content",
             metadata={},
         ),
     )
@@ -154,19 +160,19 @@ async def test_create_document_version_assigns_next_version(async_db: AsyncSessi
         ),
     )
 
-    assert version_one.version_number == 1
-    assert version_two.version_number == 2
+    assert version_one.version_number == 2
+    assert version_two.version_number == 3
 
-    fetched = await get_document_version_by_number(async_db, document.id, 2)
+    fetched = await get_document_version_by_number(async_db, document.id, 3)
     assert fetched is not None
     assert fetched.id == version_two.id
 
     versions = await list_document_versions(async_db, document.id)
-    assert [version.version_number for version in versions] == [1, 2]
+    assert [version.version_number for version in versions] == [1, 2, 3]
 
 
 @pytest.mark.anyio
-async def test_create_source_document_does_not_stage_outbox_event(async_db: AsyncSession) -> None:
+async def test_create_source_document_stages_initial_outbox_event(async_db: AsyncSession) -> None:
     source = await create_source(
         async_db,
         SourceCreate(
@@ -183,11 +189,15 @@ async def test_create_source_document_does_not_stage_outbox_event(async_db: Asyn
             source_id=source.id,
             external_id="README.md",
             title="Readme",
+            content="Initial content",
             metadata={},
         ),
     )
 
-    assert await list_outbox_events(async_db) == []
+    outbox_events = await list_outbox_events(async_db)
+    assert len(outbox_events) == 1
+    assert outbox_events[0].payload["content"] == "Initial content"
+    assert outbox_events[0].payload["change_type"] == "created"
 
 
 @pytest.mark.anyio
