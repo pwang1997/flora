@@ -36,8 +36,7 @@ def test_app_lifespan_fails_when_preflight_fails() -> None:
     worker = FakeWorker()
     app = create_app(
         worker_factory=lambda: worker,
-        kafka_check=fail_preflight,
-        qdrant_check=pass_preflight,
+        dependency_connection_check=fail_preflight,
     )
 
     with pytest.raises(RuntimeError, match="Failed to connect to Kafka cluster"):
@@ -51,8 +50,7 @@ def test_app_lifespan_starts_and_stops_background_worker() -> None:
     worker = FakeWorker()
     app = create_app(
         worker_factory=lambda: worker,
-        kafka_check=pass_preflight,
-        qdrant_check=pass_preflight,
+        dependency_connection_check=pass_preflight,
     )
 
     with TestClient(app) as client:

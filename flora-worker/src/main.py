@@ -42,6 +42,7 @@ def _check_kafka_connection_sync() -> None:
 def _check_qdrant_connection_sync() -> None:
     client = QdrantClient(
         url=settings.qdrant_host,
+        port=settings.qdrant_port,
         api_key=settings.qdrant_api_key or None,
         cloud_inference=True,
         timeout=5,
@@ -58,6 +59,10 @@ def _check_qdrant_connection_sync() -> None:
         if close is not None:
             close()
 
+def _preflight_sanity_check() -> None:
+    _check_kafka_connection_sync()
+    if settings.worker_role is not "publisher":
+        _check_qdrant_connection_sync()
 
 async def _run_worker(app: FastAPI, worker_factory: WorkerFactory) -> None:
     worker = worker_factory()
@@ -68,13 +73,11 @@ async def _run_worker(app: FastAPI, worker_factory: WorkerFactory) -> None:
 def create_app(
     *,
     worker_factory: WorkerFactory = Worker,
-    kafka_check: PreflightCheck = _check_kafka_connection_sync,
-    qdrant_check: PreflightCheck = _check_qdrant_connection_sync,
+    dependency_connection_check: PreflightCheck = _preflight_sanity_check,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        kafka_check()
-        qdrant_check()
+        dependency_connection_check()
 
         app.state.worker = None
 

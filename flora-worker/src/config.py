@@ -48,10 +48,9 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(None, validation_alias="OPENAI_API_KEY")
     jina_api_key: str | None = Field(None, validation_alias="JINA_API_KEY")
 
-    qdrant_host: str = Field("http://localhost", validation_alias="QDRANT_HOST")
-    qdrant_port: int = 6333
+    qdrant_host: str = Field(validation_alias="QDRANT_HOST")
+    qdrant_port: int = Field(6333, validation_alias="QDRANT_PORT")
     qdrant_api_key: str | None = Field(None, validation_alias="QDRANT_API_KEY")
-    # qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
     qdrant_vector_size: int = Field(1024, validation_alias="QDRANT_VECTOR_SIZE")
     qdrant_distance: str = Field("Cosine", validation_alias="QDRANT_DISTANCE")
 
