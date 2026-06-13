@@ -11,6 +11,7 @@ REPO_ROOT = WORKER_ROOT.parent
 class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    log_level: str = "DEBUG"
 
     database_url: str = "postgresql+psycopg://flora:flora@localhost:5400/flora"
 

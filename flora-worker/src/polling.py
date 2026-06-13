@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import inspect
 from typing import Literal
@@ -10,6 +11,7 @@ from publishers.outbox_publisher import OutboxPublisher
 from vector_store import QdrantVectorStore
 
 WorkerRole = Literal["publisher", "ingester", "all"]
+logger = logging.getLogger(__name__)
 
 
 class IngestionWorker:
@@ -34,34 +36,35 @@ class IngestionWorker:
         await self.consumer.close()
 
     async def run_once(self) -> int:
-        print("IngestionWorker polling")
+        logger.info("Ingestion worker polling")
         events = await self.consumer.poll()
         processed = 0
         for event in events:
             await self._process_payload(event.payload)
             await self.consumer.commit(event)
             processed += 1
-        print(f"IngestionWorker polled {processed} events")
+        logger.info("Ingestion worker processed %s events", processed)
         return processed
 
     async def _process_payload(self, payload: DocumentIngestionEventPayload) -> None:
-        print("processing payload", payload)
+        logger.debug("Processing payload for document_version_id=%s", payload.document_version_id)
         collection_name = f"source_{payload.source_id}"
 
         if payload.change_type == "deleted":
+            logger.info("Deleting Qdrant point for document_version_id=%s", payload.document_version_id)
             await self.vector_store.delete_document_version(
                 collection_name=collection_name,
                 document_version_id=payload.document_version_id,
             )
             return
 
-        print("embedding documents...")
+        logger.debug("Embedding document_version_id=%s", payload.document_version_id)
         vectors = await self.embedding_service.embed_documents([payload.content])
         vector = vectors[0]
-        print("document embedding completed...")
+        logger.debug("Embedding completed for document_version_id=%s", payload.document_version_id)
 
         self.vector_store.create_collection_if_not_exists(collection_name)
-        print("upserting vector into vector store")
+        logger.info("Upserting vector into Qdrant for document_version_id=%s", payload.document_version_id)
         await self.vector_store.upsert_document_version(
             collection_name=collection_name,
             document_version_id=payload.document_version_id,
@@ -79,7 +82,7 @@ class IngestionWorker:
                 "metadata": payload.metadata,
             },
         )
-        print("vector upsert completed")
+        logger.info("Vector upsert completed for document_version_id=%s", payload.document_version_id)
 
 
 class Worker:
@@ -92,6 +95,7 @@ class Worker:
         poll_interval_seconds: float = 2.0,
     ) -> None:
         self.role = role or settings.worker_role
+        logger.info("Initializing worker role=%s", self.role)
         self.publisher = publisher if self.role in ("publisher", "all") else None
         self.ingester = ingester if self.role in ("ingester", "all") else None
         if self.publisher is None and self.role in ("publisher", "all"):
@@ -106,14 +110,14 @@ class Worker:
             await asyncio.sleep(self.poll_interval_seconds)
 
     async def run_once(self) -> int:
-        print("worker polling")
+        logger.info("Worker polling")
 
         processed = 0
         if self.publisher is not None:
             processed += await self.publisher.run_once()
         if self.ingester is not None:
             processed += await self.ingester.run_once()
-        print(f"worker polled {processed} events")
+        logger.info("Worker processed %s events", processed)
         return processed
 
     async def close(self) -> None:

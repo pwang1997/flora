@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 
 import asyncio
 import logging
@@ -17,6 +18,11 @@ WorkerFactory = Callable[[], Worker]
 PreflightCheck = Callable[[], None]
 logger = logging.getLogger(__name__)
 
+if "pytest" not in sys.modules:
+    logging.basicConfig(
+        level=settings.log_level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 
 def _check_kafka_connection_sync() -> None:
     admin = KafkaAdminClient(
@@ -30,10 +36,11 @@ def _check_kafka_connection_sync() -> None:
         api_version_auto_timeout_ms=3000,
     )
     try:
-        print("Checking Kafka connection...")
+        logger.info("Checking Kafka connection")
         admin.describe_cluster()
-        print("Successfully connected to Kafka cluster!")
+        logger.info("Kafka connection ok")
     except Exception as exc:
+        logger.exception("Kafka connection failed")
         raise RuntimeError(f"Failed to connect to Kafka cluster: {exc}") from exc
     finally:
         admin.close()
@@ -49,19 +56,21 @@ def _check_qdrant_connection_sync() -> None:
         check_compatibility=False,
     )
     try:
-        print("Checking Qdrant connection...")
+        logger.info("Checking Qdrant connection")
         client.get_collections()
-        print("Successfully connected to Qdrant!")
+        logger.info("Qdrant connection ok")
     except Exception as exc:
+        logger.exception("Qdrant connection failed")
         raise RuntimeError(f"Failed to connect to Qdrant: {exc}") from exc
     finally:
         close = getattr(client, "close", None)
         if close is not None:
             close()
 
+
 def _preflight_sanity_check() -> None:
     _check_kafka_connection_sync()
-    if settings.worker_role is not "publisher":
+    if settings.worker_role != "publisher":
         _check_qdrant_connection_sync()
 
 async def _run_worker(app: FastAPI, worker_factory: WorkerFactory) -> None:
@@ -77,6 +86,7 @@ def create_app(
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        logger.info("Running worker dependency preflight")
         dependency_connection_check()
 
         app.state.worker = None
