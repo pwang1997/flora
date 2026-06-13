@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Literal
 from flora_shared import DEFAULT_DOCUMENT_INGESTION_TOPIC
@@ -16,6 +15,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://flora:flora@localhost:5400/flora"
 
     kafka_bootstrap_servers: str = Field(
+        "localhost:9092",
         validation_alias=AliasChoices("KAFKA_BOOTSTRAP_SERVER", "KAFKA_BOOTSTRAP_SERVERS"),
     )
     kafka_username: str = Field("", validation_alias="KAFKA_USERNAME")

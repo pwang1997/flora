@@ -14,6 +14,7 @@ from config import settings
 from polling import Worker
 
 WorkerFactory = Callable[[], Worker]
+PreflightCheck = Callable[[], None]
 logger = logging.getLogger(__name__)
 
 
@@ -57,20 +58,24 @@ def _check_qdrant_connection_sync() -> None:
         if close is not None:
             close()
 
+
 async def _run_worker(app: FastAPI, worker_factory: WorkerFactory) -> None:
     worker = worker_factory()
     app.state.worker = worker
     await worker.run_forever()
 
+
 def create_app(
     *,
     worker_factory: WorkerFactory = Worker,
+    kafka_check: PreflightCheck = _check_kafka_connection_sync,
+    qdrant_check: PreflightCheck = _check_qdrant_connection_sync,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        _check_kafka_connection_sync()
-        _check_qdrant_connection_sync()
-        
+        kafka_check()
+        qdrant_check()
+
         app.state.worker = None
 
         task = asyncio.create_task(_run_worker(app, worker_factory), name="flora-worker")
@@ -91,18 +96,18 @@ def create_app(
 
     app = FastAPI(title="Flora Worker", version="0.1.0", lifespan=lifespan)
 
+    @app.get("/health")
+    def health() -> dict[str, object]:
+        return {
+            "status": "ok",
+            "service": "flora-worker",
+        }
 
     return app
 
 
 app = create_app()
 
-@app.get("/health")
-def health() -> dict[str, object]:
-    return {
-        "status": "ok",
-        "service": "flora-worker",
-    }
 
 def run() -> None:
     uvicorn.run(app, host=settings.worker_api_host, port=settings.worker_api_port)
@@ -110,4 +115,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
- 

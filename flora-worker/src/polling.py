@@ -86,10 +86,18 @@ class Worker:
     def __init__(
         self,
         *,
+        role: WorkerRole | None = None,
+        publisher: OutboxPublisher | None = None,
+        ingester: IngestionWorker | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
-        self.publisher = OutboxPublisher()
-        self.ingester = IngestionWorker(poll_interval_seconds=poll_interval_seconds)
+        self.role = role or settings.worker_role
+        self.publisher = publisher if self.role in ("publisher", "all") else None
+        self.ingester = ingester if self.role in ("ingester", "all") else None
+        if self.publisher is None and self.role in ("publisher", "all"):
+            self.publisher = OutboxPublisher()
+        if self.ingester is None and self.role in ("ingester", "all"):
+            self.ingester = IngestionWorker(poll_interval_seconds=poll_interval_seconds)
         self.poll_interval_seconds = poll_interval_seconds
 
     async def run_forever(self) -> None:

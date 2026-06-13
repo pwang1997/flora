@@ -1,8 +1,9 @@
 import asyncio
 
+import pytest
 from fastapi.testclient import TestClient
 
-from main import DependencyStatus, create_app
+from main import create_app
 
 
 class FakeWorker:
@@ -23,40 +24,26 @@ class FakeWorker:
         self.closed = True
 
 
-async def passing_dependencies():
-    return {
-        "kafka": DependencyStatus(status="ok"),
-        "qdrant": DependencyStatus(status="ok"),
-    }
+def pass_preflight() -> None:
+    return None
 
 
-async def failing_dependencies():
-    return {
-        "kafka": DependencyStatus(status="failed", error="NoBrokersAvailable"),
-        "qdrant": DependencyStatus(status="ok"),
-    }
+def fail_preflight() -> None:
+    raise RuntimeError("Failed to connect to Kafka cluster")
 
 
-def test_worker_health_check_blocks_when_dependency_preflight_fails() -> None:
+def test_app_lifespan_fails_when_preflight_fails() -> None:
     worker = FakeWorker()
     app = create_app(
         worker_factory=lambda: worker,
-        dependency_checker=failing_dependencies,
+        kafka_check=fail_preflight,
+        qdrant_check=pass_preflight,
     )
 
-    with TestClient(app) as client:
-        response = client.get("/health")
+    with pytest.raises(RuntimeError, match="Failed to connect to Kafka cluster"):
+        with TestClient(app):
+            pass
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "ok",
-        "service": "flora-worker",
-        "worker": "blocked",
-        "dependencies": {
-            "kafka": {"status": "failed", "error": "NoBrokersAvailable"},
-            "qdrant": {"status": "ok", "error": None},
-        },
-    }
     assert worker.started is False
 
 
@@ -64,7 +51,8 @@ def test_app_lifespan_starts_and_stops_background_worker() -> None:
     worker = FakeWorker()
     app = create_app(
         worker_factory=lambda: worker,
-        dependency_checker=passing_dependencies,
+        kafka_check=pass_preflight,
+        qdrant_check=pass_preflight,
     )
 
     with TestClient(app) as client:
@@ -74,37 +62,8 @@ def test_app_lifespan_starts_and_stops_background_worker() -> None:
         assert response.json() == {
             "status": "ok",
             "service": "flora-worker",
-            "worker": "running",
-            "dependencies": {
-                "kafka": {"status": "ok", "error": None},
-                "qdrant": {"status": "ok", "error": None},
-            },
         }
         assert worker.started is True
 
     assert worker.cancelled is True
     assert worker.closed is True
-
-
-def test_app_lifespan_reports_failed_background_worker() -> None:
-    def fail_to_create_worker():
-        raise RuntimeError("broker unavailable")
-
-    app = create_app(
-        worker_factory=fail_to_create_worker,
-        dependency_checker=passing_dependencies,
-    )
-
-    with TestClient(app) as client:
-        response = client.get("/health")
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "ok",
-        "service": "flora-worker",
-        "worker": "failed",
-        "dependencies": {
-            "kafka": {"status": "ok", "error": None},
-            "qdrant": {"status": "ok", "error": None},
-        },
-    }
