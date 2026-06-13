@@ -1,9 +1,10 @@
-from embeddings.factory import create_embedding_provider
 import asyncio
+import inspect
 from typing import Literal
 
 from config import settings
 from consumers.source_document_consumer import SourceDocumentConsumer
+from embeddings.factory import create_embedding_provider
 from models import DocumentIngestionEventPayload
 from publishers.outbox_publisher import OutboxPublisher
 from vector_store import QdrantVectorStore
@@ -28,6 +29,9 @@ class IngestionWorker:
         while True:
             await self.run_once()
             await asyncio.sleep(self.poll_interval_seconds)
+
+    async def close(self) -> None:
+        await self.consumer.close()
 
     async def run_once(self) -> int:
         print("IngestionWorker polling")
@@ -82,18 +86,10 @@ class Worker:
     def __init__(
         self,
         *,
-        role: WorkerRole | None = None,
-        publisher: OutboxPublisher | None = None,
-        ingester: IngestionWorker | None = None,
         poll_interval_seconds: float = 2.0,
     ) -> None:
-        self.role = role or "all"
-        self.publisher = publisher if self.role in ("publisher", "all") else None
-        self.ingester = ingester if self.role in ("ingester", "all") else None
-        if self.publisher is None and self.role in ("publisher", "all"):
-            self.publisher = OutboxPublisher()
-        if self.ingester is None and self.role in ("ingester", "all"):
-            self.ingester = IngestionWorker(poll_interval_seconds=poll_interval_seconds)
+        self.publisher = OutboxPublisher()
+        self.ingester = IngestionWorker(poll_interval_seconds=poll_interval_seconds)
         self.poll_interval_seconds = poll_interval_seconds
 
     async def run_forever(self) -> None:
@@ -111,3 +107,11 @@ class Worker:
             processed += await self.ingester.run_once()
         print(f"worker polled {processed} events")
         return processed
+
+    async def close(self) -> None:
+        if self.ingester is not None:
+            close = getattr(self.ingester, "close", None)
+            if close is not None:
+                result = close()
+                if inspect.isawaitable(result):
+                    await result

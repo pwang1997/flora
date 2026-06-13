@@ -8,4 +8,6 @@ COPY flora-shared ./flora-shared
 WORKDIR /app/flora-worker
 RUN uv sync --frozen
 
+EXPOSE 8100
+
 CMD ["uv", "run", "python", "src/main.py"]

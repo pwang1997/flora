@@ -26,7 +26,7 @@ def build_kafka_consumer() -> KafkaConsumer:
         value_deserializer=lambda value: json.loads(value.decode("utf-8")),
         key_deserializer=lambda value: value.decode("utf-8") if value else None,
         security_protocol="SSL",
-        ssl_cafile="ca.pem",
+        ssl_cafile=settings.kafka_ssl_cafile,
         ssl_certfile="service.cert",
         ssl_keyfile="service.key",
     )

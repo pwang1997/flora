@@ -23,7 +23,7 @@ def build_kafka_producer() -> KafkaProducer:
         key_serializer=_serialize_key,
         value_serializer=_serialize_value,
         security_protocol="SSL",
-        ssl_cafile="ca.pem",
+        ssl_cafile=settings.kafka_ssl_cafile,
         ssl_certfile="service.cert",
         ssl_keyfile="service.key",
     )
