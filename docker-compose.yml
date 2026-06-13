@@ -17,8 +17,8 @@ services:
 
   flora-core:
     build:
-      context: ./flora-core
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: flora-core/Dockerfile
     environment:
       DATABASE_URL: postgresql+psycopg://flora:flora@postgres:5432/flora
     ports:
@@ -29,8 +29,8 @@ services:
 
   flora-worker:
     build:
-      context: ./flora-worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: flora-worker/Dockerfile
 
   flora-ui:
     build:

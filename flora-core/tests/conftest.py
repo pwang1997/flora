@@ -16,7 +16,7 @@ def anyio_backend():
 
 
 @pytest.fixture
-async def async_db() -> AsyncSession:
+async def async_session_factory():
     engine = create_async_engine(
         "sqlite+aiosqlite://",
         connect_args={"check_same_thread": False},
@@ -33,11 +33,17 @@ async def async_db() -> AsyncSession:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with TestingSessionLocal() as session:
+    try:
+        yield TestingSessionLocal
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+async def async_db(async_session_factory) -> AsyncSession:
+    async with async_session_factory() as session:
         yield session
         await session.rollback()
-
-    await engine.dispose()
 
 
 @pytest.fixture()

@@ -23,6 +23,7 @@ from config import settings  # noqa: E402
 from database import Base  # noqa: E402
 import models.document_versions  # noqa: F401, E402
 import models.documents  # noqa: F401, E402
+import models.outbox_events  # noqa: F401, E402
 import models.sources  # noqa: F401, E402
 
 config.set_main_option("sqlalchemy.url", settings.database_url)
