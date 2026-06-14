@@ -11,6 +11,7 @@ REPO_ROOT = WORKER_ROOT.parent
 class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    log_level: str = "DEBUG"
 
     database_url: str = "postgresql+psycopg://flora:flora@localhost:5400/flora"
 
@@ -35,9 +36,11 @@ class Settings(BaseSettings):
     outbox_retry_backoff_seconds: int = 30
     outbox_publish_batch_size: int = 50
     worker_role: Literal["publisher", "ingester", "all"] = Field(
-        "publisher",
+        "all",
         validation_alias="WORKER_ROLE",
     )
+    worker_api_host: str = Field("0.0.0.0", validation_alias="WORKER_API_HOST")
+    worker_api_port: int = Field(8100, validation_alias="WORKER_API_PORT")
 
     embedding_provider: str = Field("jina", validation_alias="EMBEDDING_PROVIDER")
     embedding_model: str = Field("jina-embeddings-v3", validation_alias="EMBEDDING_MODEL")
@@ -46,10 +49,9 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(None, validation_alias="OPENAI_API_KEY")
     jina_api_key: str | None = Field(None, validation_alias="JINA_API_KEY")
 
-    qdrant_host: str = Field("http://localhost", validation_alias="QDRANT_HOST")
-    qdrant_port: int = 6333
+    qdrant_host: str = Field("localhost", validation_alias="QDRANT_HOST")
+    qdrant_port: int = Field(6333, validation_alias="QDRANT_PORT")
     qdrant_api_key: str | None = Field(None, validation_alias="QDRANT_API_KEY")
-    # qdrant_collection_name: str = Field("flora_documents", validation_alias="QDRANT_COLLECTION_NAME")
     qdrant_vector_size: int = Field(1024, validation_alias="QDRANT_VECTOR_SIZE")
     qdrant_distance: str = Field("Cosine", validation_alias="QDRANT_DISTANCE")
 
@@ -67,4 +69,4 @@ class Settings(BaseSettings):
         return str(worker_relative)
 
 
-settings = Settings(_env_file='.env', _env_file_encoding='utf-8')
+settings = Settings()

@@ -5,7 +5,13 @@ from config import REPO_ROOT, Settings, WORKER_ROOT
 
 def test_settings_load_current_directory_env(monkeypatch, tmp_path) -> None:
     (tmp_path / ".env").write_text(
-        "DATABASE_URL=postgresql+psycopg://flora:flora@postgres:5432/flora\n",
+        "\n".join(
+            [
+                "DATABASE_URL=postgresql+psycopg://flora:flora@postgres:5432/flora",
+                "QDRANT_HOST=http://localhost",
+                "",
+            ]
+        ),
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)
@@ -19,6 +25,7 @@ def test_settings_load_current_directory_env(monkeypatch, tmp_path) -> None:
 def test_settings_resolve_worker_relative_kafka_ssl_cafile(monkeypatch) -> None:
     monkeypatch.chdir(REPO_ROOT)
     monkeypatch.setenv("KAFKA_SSL_CAFILE", "ca.pem")
+    monkeypatch.setenv("QDRANT_HOST", "http://localhost")
 
     settings = Settings()
 
